@@ -38,6 +38,28 @@ class User(db.Model):
         return self
 
 
+class Event(db.Model):
+    __tablename__ = 'events'
+    id = db.Column(db.Integer, primary_key=True)
+    place = db.Column(db.String(128), index=True)
+
+    def get_url(self):
+        return url_for('get_event', id=self.id, _external=True)
+
+    def export_data(self):
+        return {
+            'self_url': self.get_url(),
+            'place': self.place
+        }
+
+    def import_data(self, data):
+        try:
+            self.place = data['place']
+        except KeyError as e:
+            raise ValidationError('Invalid event: missing ' + e.args[0])
+        return self
+
+
 @app.route('/users/', methods=['GET'])
 def get_users():
     return jsonify({'users': [user.get_url() for user in
@@ -63,6 +85,35 @@ def edit_user(id):
     user = User.query.get_or_404(id)
     user.import_data(request.json)
     db.session.add(user)
+    db.session.commit()
+    return jsonify({})
+
+
+@app.route('/events/', methods=['GET'])
+def get_events():
+    return jsonify({'events': [event.get_url() for event in
+                              Event.query.all()]})
+
+
+@app.route('/events/<int:id>', methods=['GET'])
+def get_events(id):
+    return jsonify(User.query.get_or_404(id).export_data())
+
+
+@app.route('/events/', methods=['POST'])
+def new_events():
+    events = Event()
+    events.import_data(request.json)
+    db.session.add(events)
+    db.session.commit()
+    return jsonify({}), 201, {'Location': events.get_url()}
+
+
+@app.route('/events/<int:id>', methods=['PUT'])
+def edit_events(id):
+    events = Event.query.get_or_404(id)
+    events.import_data(request.json)
+    db.session.add(events)
     db.session.commit()
     return jsonify({})
 
