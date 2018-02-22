@@ -1,3 +1,6 @@
+werkzeug
+itsdangerous
+dateutils
 flask
 flask-script
 flask-sqlalchemy
