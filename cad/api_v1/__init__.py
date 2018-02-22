@@ -12,4 +12,4 @@ def before_request():
     pass
 
 
-from . import users, events, errors
+from . import users, events, errors, static

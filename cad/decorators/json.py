@@ -4,8 +4,7 @@ from flask import jsonify
 
 
 def json(f):
-    """Generate a JSON response from a database model or a Python
-    dictionary."""
+    """Genera una risposta JSON da un modello del DB, un dizionario Python o una lista Python"""
 
     @functools.wraps(f)
     def wrapped(*args, **kwargs):
@@ -24,7 +23,7 @@ def json(f):
 
         # if the response was a database model, then convert it to a
         # dictionary
-        if not isinstance(rv, dict):
+        if not isinstance(rv, dict) and not isinstance(rv, list):
             rv = rv.export_data()
 
         # generate the JSON response
