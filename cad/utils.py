@@ -22,16 +22,20 @@ def generic_import_data(instance, data):
     :param data: parametri da impostare
     :return: oggetto con i dati modificati
     """
-    fields = get_attr(instance)
+    # Caso in cui ci sia almeno un parametro
+    if data:
+        fields = get_attr(instance)
 
-    class_name = instance.__class__
+        class_name = instance.__class__
 
-    if class_name is User:
-        user_import_data(instance, fields, data)
-    else:
-        for field in fields:
-            if data.get(field) is not None:
-                setattr(instance, field, data[field])
+        if class_name is User:
+            print("generic_import_data user object")
+            user_import_data(instance, fields, data)
+        else:
+            print("generic_import_data default object")
+            for field in fields:
+                if data.get(field) is not None:
+                    setattr(instance, field, data[field])
 
     return instance
 

@@ -17,7 +17,7 @@ def get_events():
 @json
 def get_active_events():
     return {'active_events': [event.get_url() for event in
-                              Event.query.filter_by(active=True).all()]}
+                              Event.query.filter_by(active="True").all()]}
 
 
 @api.route('/events/<int:id>', methods=['GET'])
@@ -28,19 +28,19 @@ def get_event(id):
 
 @api.route('/events/', methods=['POST'])
 @json
-def new_events():
-    events = Event()
-    events.import_data(request.json)
-    db.session.add(events)
+def new_event():
+    event = Event()
+    event.import_data(request.json)
+    db.session.add(event)
     db.session.commit()
-    return {}, 201, {'Location': events.get_url()}
+    return {}, 201, {'Location': event.get_url()}
 
 
 @api.route('/events/<int:id>', methods=['PUT'])
 @json
-def edit_events(id):
-    events = Event.query.get_or_404(id)
-    events.import_data(request.json)
-    db.session.add(events)
+def edit_event(id):
+    event = Event.query.get_or_404(id)
+    event.import_data(request.json)
+    db.session.add(event)
     db.session.commit()
     return {}

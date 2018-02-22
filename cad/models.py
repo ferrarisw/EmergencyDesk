@@ -48,18 +48,6 @@ class User(db.Model):
         from cad.utils import generic_import_data
         return generic_import_data(self, data)
 
-        '''
-        fields = [attr for attr in vars(self)
-                  if not callable(getattr(self, attr))
-                  and not attr.startswith("_")]
-
-        for field in fields:
-            if data.get(field) is not None:
-                setattr(self, field, data[field])
-
-        return self
-        '''
-
 
 class Event(db.Model):
     __tablename__ = 'events'
@@ -75,7 +63,7 @@ class Event(db.Model):
                        and not attr.startswith("_")]
 
     def get_url(self):
-        return url_for('get_event', id=self.id, _external=True)
+        return url_for('api.get_event', id=self.id, _external=True)
 
     def export_data(self):
         return {
@@ -88,15 +76,3 @@ class Event(db.Model):
     def import_data(self, data):
         from cad.utils import generic_import_data
         return generic_import_data(self, data)
-
-        '''
-        fields = [attr for attr in vars(self)
-                  if not callable(getattr(self, attr))
-                  and not attr.startswith("_")]
-
-        for field in fields:
-            if data.get(field) is not None:
-                setattr(self, field, data[field])
-
-        return self
-        '''
