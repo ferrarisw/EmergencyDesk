@@ -12,6 +12,13 @@ def get_users():
     return {'users': [user.get_url() for user in User.query.all()]}
 
 
+@api.route('/users_raw/', methods=['GET'])
+@json
+def get_users_raw():
+    return {'users_raw': [user.export_data() for user in
+                          User.query.all()]}
+
+
 @api.route('/users/<int:id>', methods=['GET'])
 @json
 def get_user(id):

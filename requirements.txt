@@ -10,3 +10,4 @@ flask-blueprint
 flask-login
 flask-wtf
 Flask-API
+flask_httpauth

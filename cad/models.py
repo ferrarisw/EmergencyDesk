@@ -39,9 +39,10 @@ class User(db.Model):
 
     def export_data(self):
         return {
+            'id': self.id,
             'self_url': self.get_url(),
             'username': self.username,
-            'password': self.password_hash
+            'password_hash': self.password_hash
         }
 
     def import_data(self, data):
@@ -67,6 +68,7 @@ class Event(db.Model):
 
     def export_data(self):
         return {
+            'id': self.id,
             'self_url': self.get_url(),
             'place': self.place,
             'created_by': self.created_by,
