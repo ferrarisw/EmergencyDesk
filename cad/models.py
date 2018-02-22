@@ -11,8 +11,6 @@ class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True)
-    # TODO gestione password hash
-    password = ''  # Questa variabile non viene mai settata, ma solo usata per permettere il cambio della pwd
     password_hash = db.Column(db.String(128))
 
     def set_password(self, password):
@@ -38,12 +36,8 @@ class User(db.Model):
         return url_for('api.get_user', id=self.id, _external=True)
 
     def export_data(self):
-        return {
-            'id': self.id,
-            'self_url': self.get_url(),
-            'username': self.username,
-            'password_hash': self.password_hash
-        }
+        from cad.utils import generic_export_data
+        return generic_export_data(self)
 
     def import_data(self, data):
         from cad.utils import generic_import_data
@@ -90,7 +84,6 @@ class Event(db.Model):
 
     unit_dispatched = db.Column(db.Integer, default=0)
     notes = db.Column(db.String(255), nullable=True)
-    
 
     def __init__(self):
         self.fields = [attr for attr in vars(self)
@@ -101,34 +94,8 @@ class Event(db.Model):
         return url_for('api.get_event', id=self.id, _external=True)
 
     def export_data(self):
-        return {
-            'id': self.id,
-            'self_url': self.get_url(),
-            'active': self.active,
-            'created': self.created,
-            'created_by': self.created_by,
-            'phone_number': self.phone_number,
-            'country': self.country,
-            'locality': self.locality,
-            'adm_area_level_1': self.adm_area_level_1,
-            'adm_area_level_2': self.adm_area_level_2,
-            'adm_area_level_3': self.adm_area_level_3,
-            'route': self.route,
-            'street_number': self.street_number,
-            'formatted_address': self.formatted_address,
-            'lat': self.lat,
-            'long': self.long,
-            'status': self.status,
-            'is_managed': self.is_managed,
-            'is_managing': self.is_managing,
-            'managing_user': self.managing_user,
-            'emergency_place': self.emergency_place,
-            'emergency_code': self.emergency_code,
-            'emergency_criticity': self.emergency_criticity,
-            'formatted_code': self.formatted_code,
-            'unit_dispatched': self.unit_dispatched,
-            'notes': self.notes
-        }
+        from cad.utils import generic_export_data
+        return generic_export_data(self)
 
     def import_data(self, data):
         from cad.utils import generic_import_data

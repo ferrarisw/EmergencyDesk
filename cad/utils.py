@@ -12,6 +12,15 @@ def get_attr(instance):
             and not attr.startswith("_")]
 
 
+def generic_export_data(instance):
+    data = {}
+    from cad.utils import get_attr
+    for attr in get_attr(instance):
+        data[attr] = getattr(instance, attr)
+    data['self_url'] = instance.get_url()
+    return data
+
+
 def generic_import_data(instance, data):
     """
     Metodo generico di importazione dei dati.
