@@ -3,7 +3,7 @@ from werkzeug.exceptions import NotFound
 from werkzeug.urls import url_parse
 
 from cad.exceptions import ValidationError
-from cad.models import User
+from cad.models import User, Event
 
 
 def get_attr(instance):
@@ -31,6 +31,10 @@ def generic_import_data(instance, data):
         if class_name is User:
             print("generic_import_data user object")
             user_import_data(instance, fields, data)
+
+        elif class_name is Event:
+            print("generic_import_data event object")
+            event_import_data(instance, fields, data)
         else:
             print("generic_import_data default object")
             for field in fields:
@@ -43,8 +47,46 @@ def generic_import_data(instance, data):
 def user_import_data(instance, fields, data):
     for field in fields:
         if data.get(field) is not None:
-            if field is 'password_hash':  # Caso specifico per il cambio della password
+
+            '''Gestisce il cambiamento della password'''
+            if field is 'password_hash':
                 instance.set_password(data[field])
+
+            else:  # Caso generico
+                setattr(instance, field, data[field])
+
+
+def event_import_data(instance, fields, data):
+    for field in fields:
+        if data.get(field) is not None:
+
+            '''
+            Gestisce lo stato di attivita' dell'evento
+            '''
+            if field is 'active':
+                if data[field] == 'True':
+                    setattr(instance, 'active', True)
+                elif data[field] == 'False':
+                    setattr(instance, 'active', False)
+
+            elif field is 'emergency_place' or 'emergency_code' or 'emergency_criticity':
+
+                old_place = getattr(instance, 'emergency_place') or '*'
+                old_code = getattr(instance, 'emergency_code') or '*'
+                old_criticity = getattr(instance, 'emergency_criticity') or '*'
+
+                place = data.get('emergency_place') or '*'
+                code = data.get('emergency_code') or '*'
+                criticity = data.get('emergency_criticity') or '*'
+
+                formatted_code = (place or old_place) + (code or old_code) + (criticity or old_criticity)
+
+                print('OLD ' + old_place + old_code + old_criticity)
+                print('NEW ' + formatted_code)
+
+                setattr(instance, field, data[field])
+                setattr(instance, 'formatted_code', formatted_code)
+
             else:  # Caso generico
                 setattr(instance, field, data[field])
 

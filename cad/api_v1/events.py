@@ -24,14 +24,14 @@ def get_events_raw():
 @json
 def get_active_events():
     return {'active_events': [event.get_url() for event in
-                              Event.query.filter_by(active="True").all()]}
+                              Event.query.filter_by(active=True).all()]}
 
 
 @api.route('/active_events_raw/', methods=['GET'])
 @json
 def get_active_events_raw():
     return {'active_events_raw': [event.export_data() for event in
-                                  Event.query.filter_by(active="True").all()]}
+                                  Event.query.filter_by(active=True).all()]}
 
 
 @api.route('/events/<int:id>', methods=['GET'])
