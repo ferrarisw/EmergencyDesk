@@ -96,11 +96,6 @@ class Event(db.Model):
     unit_dispatched = db.Column(db.Integer, default=0)
     notes = db.Column(db.String(255), nullable=True)
 
-    def __init__(self):
-        self.fields = [attr for attr in vars(self)
-                       if not callable(getattr(self, attr))
-                       and not attr.startswith("_")]
-
     def get_url(self):
         return url_for('api.get_event', id=self.id, _external=True)
 
@@ -189,9 +184,19 @@ class Log(db.Model):
     # Basic Data
 
     id = db.Column(db.Integer, primary_key=True)
-    event = db.Column(db.Integer, db.ForeignKey('events.id'))
-    created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    log = db.Column(db.String(255))
-    '''
-    '''
+    created = db.Column(db.DateTime, default=datetime.datetime.utcnow, nullable=False)
+    created_by = db.Column(db.String(128))
+    user_agent = db.Column(db.Integer, db.ForeignKey('users.id'))
+    event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
+    mission_id = db.Column(db.Integer, db.ForeignKey('missions.id'), nullable=True)
+    log_action = db.Column(db.String(128), nullable=False, default='')
+    log_message = db.Column(db.Text, nullable=True)
+
+    def get_url(self):
+        return url_for('api.get_logs', id=self.id, _external=True)
+
+    def export_data(self):
+        return generic_export_data(self)
+
+    def import_data(self, data):
+        return self

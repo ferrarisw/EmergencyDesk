@@ -2,7 +2,7 @@
 import os
 
 from cad import create_app, db
-from cad.models import User
+from cad.models import User, Log
 
 if __name__ == '__main__':
     app = create_app(os.environ.get('FLASK_CONFIG', 'development'))
@@ -10,8 +10,13 @@ if __name__ == '__main__':
         db.create_all()
         # create a development user
         if User.query.get(1) is None:
-            u = User(username='davide')
-            u.set_password('cat')
-            db.session.add(u)
+            user = User(username='davide')
+            user.set_password('cat')
+            db.session.add(user)
             db.session.commit()
+
+            log = Log(created_by='System', event_id=user.id, log_action='User Created')
+            db.session.add(log)
+            db.session.commit()
+
     app.run()

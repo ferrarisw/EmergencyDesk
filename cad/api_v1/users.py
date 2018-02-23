@@ -3,7 +3,7 @@ from flask import request
 from cad import db
 from cad.api_v1 import api
 from cad.decorators import json
-from cad.models import User
+from cad.models import User, Log
 
 
 @api.route('/users/', methods=['GET'])
@@ -32,6 +32,11 @@ def new_user():
     user.import_data(request.json)
     db.session.add(user)
     db.session.commit()
+
+    log = Log(created_by='System', event_id=user.id, log_message='User Created')
+    db.session.add(log)
+    db.session.commit()
+
     return {}, 201, {'Location': user.get_url()}
 
 
@@ -42,4 +47,9 @@ def edit_user(id):
     user.import_data(request.json)
     db.session.add(user)
     db.session.commit()
+
+    log = Log(created_by='System', log_action='User Data Modified')
+    db.session.add(log)
+    db.session.commit()
+
     return {}

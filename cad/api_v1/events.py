@@ -3,7 +3,7 @@ from flask import request
 from cad import db
 from cad.api_v1 import api
 from cad.decorators import json
-from cad.models import Event
+from cad.models import Event, Log
 
 
 @api.route('/events/', methods=['GET'])
@@ -45,8 +45,14 @@ def get_event(id):
 def new_event():
     event = Event()
     event.import_data(request.json)
+
     db.session.add(event)
     db.session.commit()
+
+    log = Log(created_by='System', event_id=event.id, log_message='Event Created')
+    db.session.add(log)
+    db.session.commit()
+
     return {}, 201, {'Location': event.get_url()}
 
 
@@ -57,4 +63,9 @@ def edit_event(id):
     event.import_data(request.json)
     db.session.add(event)
     db.session.commit()
+
+    log = Log(created_by='System', event_id=event.id, log_action='Event Data Modified')
+    db.session.add(log)
+    db.session.commit()
+
     return {}
