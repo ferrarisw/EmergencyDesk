@@ -4,6 +4,7 @@ from flask import url_for, current_app
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from cad.utils import get_fields, generic_export_data, set_field
 from . import db
 
 
@@ -36,12 +37,22 @@ class User(db.Model):
         return url_for('api.get_user', id=self.id, _external=True)
 
     def export_data(self):
-        from cad.utils import generic_export_data
         return generic_export_data(self)
 
     def import_data(self, data):
-        from cad.utils import generic_import_data
-        return generic_import_data(self, data)
+        fields = get_fields(self)
+
+        for field in fields:
+            if data.get(field) is not None:
+
+                '''Gestisce il cambiamento della password'''
+                if field is 'password_hash' or 'password':
+                    self.set_password(data[field])
+
+                else:  # Caso generico
+                    set_field(self, field, data[field])
+
+        return self
 
 
 class Event(db.Model):
@@ -94,12 +105,57 @@ class Event(db.Model):
         return url_for('api.get_event', id=self.id, _external=True)
 
     def export_data(self):
-        from cad.utils import generic_export_data
         return generic_export_data(self)
 
     def import_data(self, data):
-        from cad.utils import generic_import_data
-        return generic_import_data(self, data)
+        fields = get_fields(self)
+
+        for field in fields:
+            if data.get(field) is not None:
+
+                '''
+                Gestisce lo stato di attivita' dell'evento
+                '''
+                if field is 'active':
+                    if data[field] == 'True':
+                        set_field(self, 'active', True)
+                    elif data[field] == 'False':
+                        set_field(self, 'active', False)
+
+                elif field is 'emergency_place' or 'emergency_code' or 'emergency_criticity':
+
+                    old_place = getattr(self, 'emergency_place') or '*'
+                    old_code = getattr(self, 'emergency_code') or '*'
+                    old_criticity = getattr(self, 'emergency_criticity') or '*'
+
+                    place = data.get('emergency_place') or '*'
+                    code = data.get('emergency_code') or '*'
+                    criticity = data.get('emergency_criticity') or '*'
+
+                    formatted_code = (place or old_place) + (code or old_code) + (criticity or old_criticity)
+
+                    # print('OLD ' + old_place + old_code + old_criticity)
+                    # print('NEW ' + formatted_code)
+
+                    set_field(self, field, data[field])
+                    set_field(self, 'formatted_code', formatted_code)
+
+                elif field is 'lat' or 'long':
+                    set_field(self, field, float(data[field]))
+
+                elif field is 'managing_user':
+                    set_field(self, field, int(data[field]))
+
+                elif field is 'id' or 'unit_dispatched' or 'created_by' or 'created':
+                    # Questi campi non possono essere modificati manualmente
+                    # ma sono settati automaticamente dal sistema
+                    print("Non modificabile")
+                    pass
+
+                else:  # Caso generico
+                    set_field(self, field, data[field])
+
+        return self
 
 
 class Mission(db.Model):

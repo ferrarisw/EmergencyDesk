@@ -3,10 +3,16 @@ from werkzeug.exceptions import NotFound
 from werkzeug.urls import url_parse
 
 from cad.exceptions import ValidationError
-from cad.models import User, Event
 
 
-def get_attr(instance):
+def set_field(instance, field, data):
+    if data is '' or not data:
+        super.__setattr__(instance, field, None)
+    else:
+        super.__setattr__(instance, field, data)
+
+
+def get_fields(instance):
     return [attr for attr in vars(instance)
             if not callable(getattr(instance, attr))
             and not attr.startswith("_")]
@@ -14,90 +20,10 @@ def get_attr(instance):
 
 def generic_export_data(instance):
     data = {}
-    from cad.utils import get_attr
-    for attr in get_attr(instance):
+    for attr in get_fields(instance):
         data[attr] = getattr(instance, attr)
     data['self_url'] = instance.get_url()
     return data
-
-
-def generic_import_data(instance, data):
-    """
-    Metodo generico di importazione dei dati.
-    Da qui si gestiscono le richieste PUT eventualmente in base al tipo di dato
-    richiesto.
-
-    :param instance: oggetto sul quale eseguire la PUT
-    :param data: parametri da impostare
-    :return: oggetto con i dati modificati
-    """
-    # Caso in cui ci sia almeno un parametro
-    if data:
-        fields = get_attr(instance)
-
-        class_name = instance.__class__
-
-        if class_name is User:
-            print("generic_import_data user object")
-            user_import_data(instance, fields, data)
-
-        elif class_name is Event:
-            print("generic_import_data event object")
-            event_import_data(instance, fields, data)
-        else:
-            print("generic_import_data default object")
-            for field in fields:
-                if data.get(field) is not None:
-                    setattr(instance, field, data[field])
-
-    return instance
-
-
-def user_import_data(instance, fields, data):
-    for field in fields:
-        if data.get(field) is not None:
-
-            '''Gestisce il cambiamento della password'''
-            if field is 'password_hash':
-                instance.set_password(data[field])
-
-            else:  # Caso generico
-                setattr(instance, field, data[field])
-
-
-def event_import_data(instance, fields, data):
-    for field in fields:
-        if data.get(field) is not None:
-
-            '''
-            Gestisce lo stato di attivita' dell'evento
-            '''
-            if field is 'active':
-                if data[field] == 'True':
-                    setattr(instance, 'active', True)
-                elif data[field] == 'False':
-                    setattr(instance, 'active', False)
-
-            elif field is 'emergency_place' or 'emergency_code' or 'emergency_criticity':
-
-                old_place = getattr(instance, 'emergency_place') or '*'
-                old_code = getattr(instance, 'emergency_code') or '*'
-                old_criticity = getattr(instance, 'emergency_criticity') or '*'
-
-                place = data.get('emergency_place') or '*'
-                code = data.get('emergency_code') or '*'
-                criticity = data.get('emergency_criticity') or '*'
-
-                formatted_code = (place or old_place) + (code or old_code) + (criticity or old_criticity)
-
-                print('OLD ' + old_place + old_code + old_criticity)
-                print('NEW ' + formatted_code)
-
-                setattr(instance, field, data[field])
-                setattr(instance, 'formatted_code', formatted_code)
-
-            else:  # Caso generico
-                setattr(instance, field, data[field])
 
 
 def split_url(url, method='GET'):
