@@ -3,14 +3,15 @@ import googlemaps
 from cad.api_v1 import api
 from cad.decorators import json
 
-GOOGLE_MAPS_API_KEY = 'AIzaSyDV40MOxLr9fo2G1BwxEaA6WBXpZa1Fnjs'
+GOOGLE_MAPS_api_key = 'AIzaSyDV40MOxLr9fo2G1BwxEaA6WBXpZa1Fnjs'
 
 GMAPS_CONF = {
-    'API_KEY': 'AIzaSyDV40MOxLr9fo2G1BwxEaA6WBXpZa1Fnjs',
-    'mode': 'driving',
-    'units': 'metric',
+    'api_key': 'AIzaSyDV40MOxLr9fo2G1BwxEaA6WBXpZa1Fnjs',
     'departure_time': 'now',
-    'traffic_model': 'pessimistic'
+    'language': 'IT',
+    'mode': 'driving',
+    'traffic_model': 'pessimistic',
+    'units': 'metric'
 }
 
 GMAPS_TOP_RESPONSES = {
@@ -35,24 +36,52 @@ GMAPS_ELEMENT_RESPONSES = {
 @api.route('/utils/geocode/<string:query>', methods=['GET'])
 @json
 def geocode(query):
-    gm = googlemaps.Client(key=GMAPS_CONF['API_KEY'])
-    geocode_results = gm.geocode(query)
-    return geocode_results[0]
+    gm = googlemaps.Client(key=GMAPS_CONF['api_key'])
+    data = gm.geocode(query, language=GMAPS_CONF['language'])[0]
+
+    geocoded_data = {}
+
+    for item in data['address_components']:
+        for category in item['types']:
+            data[category] = {}
+            data[category] = item['long_name']
+    geocoded_data['country'] = data.get("country", None)
+    geocoded_data['administrative_area_level_3'] = data.get("administrative_area_level_3", None)
+    geocoded_data['administrative_area_level_2'] = data.get("administrative_area_level_2", None)
+    geocoded_data['administrative_area_level_1'] = data.get("administrative_area_level_1", None)
+    geocoded_data['locality'] = data.get("locality", None)
+    geocoded_data['sublocality'] = data.get("sublocality", None)
+    geocoded_data['subpremise'] = data.get("subpremise", None)
+    geocoded_data['postal_town'] = data.get("postal_town", None)
+    geocoded_data['postal_code'] = data.get("postal_code", None)
+    geocoded_data['postal_code_suffix'] = data.get("postal_code_suffix", None)
+    geocoded_data['neighborhood'] = data.get("neighborhood", None)
+    geocoded_data['route'] = data.get("route", None)
+    geocoded_data['street_number'] = data.get('street_number', None)
+    geocoded_data['housenumber'] = data.get("housenumber", None)
+    geocoded_data['latitude'] = data.get("geometry", {}).get("location", {}).get("lat", None)
+    geocoded_data['longitude'] = data.get("geometry", {}).get("location", {}).get("lng", None)
+    geocoded_data['location_type'] = data.get("geometry", {}).get("location_type", None)
+    geocoded_data['formatted_address'] = data['formatted_address']
+
+    return geocoded_data
 
 
 @api.route('/utils/formatted_address/<string:query>', methods=['GET'])
 @json
 def get_formatted_address(query):
-    gm = googlemaps.Client(key=GMAPS_CONF['API_KEY'])
+    gm = googlemaps.Client(key=GMAPS_CONF['api_key'])
     geocode_results = gm.geocode(query)[0]
 
-    return geocode_results['formatted_address']
+    return {
+        'formatted_address': geocode_results['formatted_address'],
+    }
 
 
 @api.route('/utils/distance/<string:origin>/<string:destination>', methods=['GET'])
 @json
 def distance(origin, destination):
-    gm = googlemaps.Client(key=GMAPS_CONF['API_KEY'])
+    gm = googlemaps.Client(key=GMAPS_CONF['api_key'])
     distance_matrix = gm.distance_matrix(origin,
                                          destination,
                                          mode=GMAPS_CONF['mode'],
