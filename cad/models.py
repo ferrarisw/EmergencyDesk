@@ -62,12 +62,17 @@ class Event(db.Model):
 
     id = db.Column(db.Integer, nullable=False, primary_key=True)
     active = db.Column(db.Boolean, nullable=False, default=True)
+
     created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, default=1)
-    phone_number = db.Column(db.String(25), nullable=True)
+    updated = db.Column(db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow)
+    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    closed = db.Column(db.DateTime, nullable=True)
+    closed_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
 
     # Geolocation data
 
+    phone_number = db.Column(db.String(25), nullable=True)
     country = db.Column(db.String(128), nullable=True)
     locality = db.Column(db.String(128), nullable=True)
     adm_area_level_1 = db.Column(db.String(128), nullable=True)
@@ -82,19 +87,17 @@ class Event(db.Model):
     # Event Status
 
     status = db.Column(db.String(128), nullable=False, default='UNMANAGED')
+    is_editing = db.Column(db.Boolean, nullable=False, default=False)
     is_managed = db.Column(db.Boolean, nullable=False, default=False)
     is_managing = db.Column(db.Boolean, nullable=False, default=False)
     managing_user = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
 
     # Event Data
 
-    emergency_place = db.Column(db.String(1), nullable=True)
-    emergency_code = db.Column(db.String(1), nullable=True)
-    emergency_criticity = db.Column(db.String(1), nullable=True)
-    formatted_code = db.Column(db.String(1), nullable=True)
-
     unit_dispatched = db.Column(db.Integer, default=0)
     notes = db.Column(db.String(255), nullable=True)
+
+    interventions = db.relationship("InterventionEMS", back_populates="event")
 
     def get_url(self):
         return url_for('api.get_event', id=self.id, _external=True)
@@ -153,16 +156,69 @@ class Event(db.Model):
         return self
 
 
-class Mission(db.Model):
-    __tablename__ = 'missions'
+# class InterventionBase(db.Model):
+#     __tablename__ = 'intervention_base'
+#
+#     # Basic Data
+#
+#     id = db.Column(db.Integer, primary_key=True)
+#     created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+#     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+#     updated = db.Column(db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow)
+#     updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+#     closed = db.Column(db.DateTime, nullable=True)
+#     closed_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+#
+#     status = db.Column(db.String(128), nullable=False, default='CREATED')
+#     is_editing = db.Column(db.Boolean, nullable=False, default=False)
+#     is_managed = db.Column(db.Boolean, nullable=False, default=False)
+
+
+class InterventionEMS(db.Model):
+    __tablename__ = 'intervention_ems'
 
     # Basic Data
 
     id = db.Column(db.Integer, primary_key=True)
     created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    '''
-    '''
+    updated = db.Column(db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow)
+    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    closed = db.Column(db.DateTime, nullable=True)
+    closed_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+
+    status = db.Column(db.String(128), nullable=False, default='CREATED')
+    is_editing = db.Column(db.Boolean, nullable=False, default=False)
+    is_managed = db.Column(db.Boolean, nullable=False, default=False)
+    place = db.Column(db.String(1), nullable=True)
+    pathology = db.Column(db.String(3), nullable=True)
+    criticity = db.Column(db.String(1), nullable=True)
+    formatted_code = db.Column(db.String(5), nullable=True)
+
+    event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
+    event = db.relationship('Event', foreign_keys=event_id)
+    unit_id = db.Column(db.Integer, db.ForeignKey('units.id'), nullable=True)
+    unit = db.relationship('Unit', foreign_keys=unit_id)
+
+    unit_call_sign = db.Column(db.String(64), db.ForeignKey('units.call_sign'))
+    unit_profile = db.Column(db.String(64))
+    unit_type = db.Column(db.String(64))
+    unit_progressive = db.Column(db.Integer)
+
+    alarmed = db.Column(db.Boolean, nullable=True, default=False)
+    blu_event = db.Column(db.Boolean, nullable=True)
+    formatted_address = db.Column(db.String(128), nullable=True)
+
+    date_IN = db.Column(db.DateTime)
+    date_PA = db.Column(db.DateTime)
+    date_AR = db.Column(db.DateTime)
+    date_CA = db.Column(db.DateTime)
+    date_FIN = db.Column(db.DateTime)
+    last_update = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    outcome = db.Column(db.String(128), nullable=True)
+    sanitary_eval = db.Column(db.String(1), nullable=True)
+    destination = db.Column(db.String(128), nullable=True)
 
 
 class Unit(db.Model):
@@ -174,8 +230,18 @@ class Unit(db.Model):
     status = db.Column(db.String(64), default=True)
     created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    '''
-    '''
+
+    call_sign = db.Column(db.String(64))
+    profile = db.Column(db.String(64))
+    type = db.Column(db.String(64))
+
+    current_address = db.Column(db.String(128), nullable=True)
+    lat = db.Column(db.Float, nullable=True)
+    long = db.Column(db.Float, nullable=True)
+
+    event_dispatched = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
+    intervention_dispatched = db.Column(db.Integer, db.ForeignKey('intervention_ems.id'), nullable=True)
+    active = db.Column(db.Boolean, nullable=False, default=False)
 
 
 class Log(db.Model):
@@ -188,7 +254,7 @@ class Log(db.Model):
     created_by = db.Column(db.String(128))
     user_agent = db.Column(db.Integer, db.ForeignKey('users.id'))
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
-    mission_id = db.Column(db.Integer, db.ForeignKey('missions.id'), nullable=True)
+    intervention_ems_id = db.Column(db.Integer, db.ForeignKey('intervention_ems.id'), nullable=True)
     log_action = db.Column(db.String(128), nullable=False, default='')
     log_message = db.Column(db.Text, nullable=True)
 

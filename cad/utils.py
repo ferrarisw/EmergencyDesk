@@ -21,7 +21,7 @@ def get_fields(instance):
 def log_cad(db, created_by=None, user_agent=None, event_id=None, mission_id=None,
             log_action=None, log_message=None):
     from cad.models import Log
-    log = Log(created_by=created_by, user_agent=user_agent, event_id=event_id, mission_id=mission_id,
+    log = Log(created_by=created_by, user_agent=user_agent, event_id=event_id, intervention_ems_id=mission_id,
               log_action=log_action, log_message=log_message)
     db.session.add(log)
     db.session.commit()

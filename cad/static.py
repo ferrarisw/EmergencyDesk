@@ -152,11 +152,8 @@ EVENT_EMS_CRITICITY = [
         'long_name': 'Bianco',
         'short_name': 'B',
         'car_types': [
-            {
-                'profile': 'BLSD',
-                'amount': 1
-            }
         ],
+        'color': '#ffffff',
         'order': 1
     },
     {
@@ -164,6 +161,7 @@ EVENT_EMS_CRITICITY = [
         'short_name': 'V',
         'car_types': [
         ],
+        'color': '#3cb371',
         'order': 2
     },
     {
@@ -171,6 +169,7 @@ EVENT_EMS_CRITICITY = [
         'short_name': 'G',
         'car_types': [
         ],
+        'color': '#ffa500',
         'order': 3
     },
     {
@@ -182,6 +181,7 @@ EVENT_EMS_CRITICITY = [
                 'amount': 1
             }
         ],
+        'color': '#ff6347',
         'order': 4
     }
 ]
@@ -240,7 +240,7 @@ UNIT_EMS_TYPE = [
     }
 ]
 
-MISSION_EMS_STATUS = [
+INTERVENTION_EMS_STATUS = [
     {
         'long_name': 'DISPATCHED',
         'short_name': 'IN',
@@ -272,3 +272,68 @@ MISSION_EMS_STATUS = [
         'order': 6
     }
 ]
+
+INTERVENTION_EMS_EVAL = [
+    {
+        'long_name': 'Low Criticity',
+        'short_name': 1,
+        'order': 1
+    },
+    {
+        'long_name': 'Medium Criticity',
+        'short_name': 2,
+        'order': 2
+    },
+    {
+        'long_name': 'High Criticity',
+        'short_name': 3,
+        'order': 3
+    },
+    {
+        'long_name': 'Death',
+        'short_name': 4,
+        'order': 4
+    }
+]
+
+INTERVENTION_EMS_OUTCOME = {
+    1: {
+        'long_name': 'Patient to the hospital',
+        'short_name': 'TO_H',
+        'order': 1
+    },
+    2: {
+        'long_name': 'On place treatment',
+        'short_name': 'ON_PLACE_TR',
+        'order': 2
+    },
+    3: {
+        'long_name': 'Abort',
+        'short_name': 'ABORT',
+        'order': 50
+    }
+}
+
+LOGS = {
+    'EVENT_LOG': [
+        {
+            'message': 'Event Created',
+            'order': 1
+        },
+        {
+            'message': 'Event Status Modified',
+            'order': 2
+        },
+        {
+            'message': 'Event Data Modified',
+            'order': 3
+        },
+        {
+            'message': 'Event Closed',
+            'order': 4
+        }
+    ],
+    'MISSION_LOG': [
+
+    ]
+}
