@@ -92,6 +92,9 @@ class Event(db.Model):
     is_managing = db.Column(db.Boolean, nullable=False, default=False)
     managing_user = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
 
+    dispatch_delayed = db.Column(db.DateTime, nullable=True)
+    dispatch_date = db.Column(db.DateTime, nullable=True)
+
     # Event Data
 
     type = db.Column(db.String(10), nullable=True)
