@@ -30,9 +30,14 @@ def get_unit(id):
 @json
 def new_unit():
     unit = Unit()
-    unit.import_data(request.json)
     db.session.add(unit)
     db.session.commit()
+
+    if request.json:
+        unit = Unit.query.get_or_404(unit.id)
+        unit.import_data(request.json)
+        db.session.add(unit)
+        db.session.commit()
 
     log_cad(db, created_by='System', log_action='Unit Created')
 

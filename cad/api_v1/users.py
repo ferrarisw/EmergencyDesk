@@ -30,9 +30,14 @@ def get_user(id):
 @json
 def new_user():
     user = User()
-    user.import_data(request.json)
     db.session.add(user)
     db.session.commit()
+
+    if request.json:
+        user = User.query.get_or_404(user.id)
+        user.import_data(request.json)
+        db.session.add(user)
+        db.session.commit()
 
     log_cad(db, created_by='System', log_action='User Created')
 

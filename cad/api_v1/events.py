@@ -45,10 +45,14 @@ def get_event(id):
 @json
 def new_event():
     event = Event()
-    event.import_data(request.json)
-
     db.session.add(event)
     db.session.commit()
+
+    if request.json:
+        event = Event.query.get_or_404(event.id)
+        event.import_data(request.json)
+        db.session.add(event)
+        db.session.commit()
 
     log_cad(db, created_by='System', event_id=event.id, log_action='Event Created')
 

@@ -94,6 +94,12 @@ class Event(db.Model):
 
     # Event Data
 
+    type = db.Column(db.String(10), nullable=True)
+    place = db.Column(db.String(1), nullable=True)
+    code = db.Column(db.String(3), nullable=True)
+    criticity = db.Column(db.String(1), nullable=True)
+    formatted_code = db.Column(db.String(5), nullable=True)
+
     unit_dispatched = db.Column(db.Integer, default=0)
     notes = db.Column(db.String(255), nullable=True)
 
@@ -120,15 +126,15 @@ class Event(db.Model):
                     elif data[field] == 'False':
                         set_field(self, 'active', False)
 
-                elif field is 'emergency_place' or 'emergency_code' or 'emergency_criticity':
+                elif field is 'place' or 'code' or 'criticity':
 
-                    old_place = getattr(self, 'emergency_place') or '*'
-                    old_code = getattr(self, 'emergency_code') or '*'
-                    old_criticity = getattr(self, 'emergency_criticity') or '*'
+                    old_place = getattr(self, 'place') or '*'
+                    old_code = getattr(self, 'code') or '*'
+                    old_criticity = getattr(self, 'criticity') or '*'
 
-                    place = data.get('emergency_place') or '*'
-                    code = data.get('emergency_code') or '*'
-                    criticity = data.get('emergency_criticity') or '*'
+                    place = data.get('place') or '*'
+                    code = data.get('code') or '*'
+                    criticity = data.get('criticity') or '*'
 
                     formatted_code = (place or old_place) + (code or old_code) + (criticity or old_criticity)
 
@@ -190,10 +196,6 @@ class InterventionEMS(db.Model):
     status = db.Column(db.String(128), nullable=False, default='CREATED')
     is_editing = db.Column(db.Boolean, nullable=False, default=False)
     is_managed = db.Column(db.Boolean, nullable=False, default=False)
-    place = db.Column(db.String(1), nullable=True)
-    pathology = db.Column(db.String(3), nullable=True)
-    criticity = db.Column(db.String(1), nullable=True)
-    formatted_code = db.Column(db.String(5), nullable=True)
 
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
     event = db.relationship('Event', foreign_keys=event_id)
