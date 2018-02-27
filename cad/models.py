@@ -82,7 +82,7 @@ class Event(db.Model):
     street_number = db.Column(db.String(128), nullable=True)
     formatted_address = db.Column(db.String(128), nullable=True)
     lat = db.Column(db.Float, nullable=True)
-    long = db.Column(db.Float, nullable=True)
+    lng = db.Column(db.Float, nullable=True)
 
     # Event Status
 
@@ -144,7 +144,7 @@ class Event(db.Model):
                     set_field(self, field, data[field])
                     set_field(self, 'formatted_code', formatted_code)
 
-                elif field is 'lat' or 'long':
+                elif field is 'lat' or 'lng':
                     set_field(self, field, float(data[field]))
 
                 elif field is 'managing_user':
@@ -162,22 +162,21 @@ class Event(db.Model):
         return self
 
 
-# class InterventionBase(db.Model):
-#     __tablename__ = 'intervention_base'
-#
-#     # Basic Data
-#
-#     id = db.Column(db.Integer, primary_key=True)
-#     created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-#     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-#     updated = db.Column(db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow)
-#     updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-#     closed = db.Column(db.DateTime, nullable=True)
-#     closed_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-#
-#     status = db.Column(db.String(128), nullable=False, default='CREATED')
-#     is_editing = db.Column(db.Boolean, nullable=False, default=False)
-#     is_managed = db.Column(db.Boolean, nullable=False, default=False)
+class InterventionBase(object):
+
+    # Basic Data
+
+    id = db.Column(db.Integer, primary_key=True)
+    created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    updated = db.Column(db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow)
+    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    closed = db.Column(db.DateTime, nullable=True)
+    closed_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+
+    status = db.Column(db.String(128), nullable=False, default='CREATED')
+    is_editing = db.Column(db.Boolean, nullable=False, default=False)
+    is_managed = db.Column(db.Boolean, nullable=False, default=False)
 
 
 class InterventionEMS(db.Model):
@@ -240,7 +239,7 @@ class Unit(db.Model):
 
     current_address = db.Column(db.String(128), nullable=True)
     lat = db.Column(db.Float, nullable=True)
-    long = db.Column(db.Float, nullable=True)
+    lng = db.Column(db.Float, nullable=True)
 
     event_dispatched = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
     intervention_dispatched = db.Column(db.Integer, db.ForeignKey('intervention_ems.id'), nullable=True)

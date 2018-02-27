@@ -147,6 +147,19 @@ EVENT_EMS_CODE = [
     }
 ]
 
+EVENT_EMS_TYPE = [
+    {
+        'long_name': 'Soccorso Primario',
+        'short_name': 'EMS',
+        'order': 1
+    },
+    {
+        'long_name': 'Trasferimento Interospedaliero Urgente',
+        'short_name': 'TIU',
+        'order': 2
+    },
+]
+
 EVENT_EMS_CRITICITY = [
     {
         'long_name': 'Bianco',
