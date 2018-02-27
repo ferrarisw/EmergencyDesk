@@ -227,7 +227,8 @@ class Unit(db.Model):
     # Basic Data
 
     id = db.Column(db.Integer, primary_key=True)
-    status = db.Column(db.String(64), default=True)
+    status = db.Column(db.String(64), default='OPERATIVE'
+                                              '')
     created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
 
@@ -242,6 +243,21 @@ class Unit(db.Model):
     event_dispatched = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
     intervention_dispatched = db.Column(db.Integer, db.ForeignKey('intervention_ems.id'), nullable=True)
     active = db.Column(db.Boolean, nullable=False, default=False)
+
+    def get_url(self):
+        return url_for('api.get_unit', id=self.id, _external=True)
+
+    def export_data(self):
+        return generic_export_data(self)
+
+    def import_data(self, data):
+        fields = get_fields(self)
+
+        for field in fields:
+            if data.get(field) is not None:
+                set_field(self, field, data[field])
+
+        return self
 
 
 class Log(db.Model):
