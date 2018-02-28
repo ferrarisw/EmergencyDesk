@@ -42,7 +42,7 @@ def geocode(query):
     geocoded_data['address_components']['housenumber'] = data.get("housenumber", None)
 
     geocoded_data['formatted_address'] = data['formatted_address']
-
+    geocoded_data['place_id'] = data['place_id']
     geocoded_data['last_update'] = datetime.datetime.now()
 
     # GEOMETRY
@@ -86,14 +86,24 @@ def distance(origin, destination):
     element_level_response = distance_matrix['rows'][0]['elements'][0]['status']
 
     if top_level_response == 'OK' and element_level_response == 'OK':
-        duration = distance_matrix['rows'][0]['elements'][0]['duration']['value']
-        duration_in_traffic = distance_matrix['rows'][0]['elements'][0]['duration_in_traffic']['value']
-        distance = distance_matrix['rows'][0]['elements'][0]['distance']['value']
+
+        duration = {}
+        duration_in_traffic = {}
+        distance = {}
+
+        duration['value'] = distance_matrix['rows'][0]['elements'][0]['duration']['value']
+        duration['text'] = distance_matrix['rows'][0]['elements'][0]['duration']['text']
+        duration_in_traffic['value'] = distance_matrix['rows'][0]['elements'][0]['duration_in_traffic']['value']
+        duration_in_traffic['text'] = distance_matrix['rows'][0]['elements'][0]['duration_in_traffic']['text']
+        distance['value'] = distance_matrix['rows'][0]['elements'][0]['distance']['value']
+        distance['text'] = distance_matrix['rows'][0]['elements'][0]['distance']['text']
 
         return {
             'duration': duration,
             'duration_in_traffic': duration_in_traffic,
-            'distance': distance}
+            'distance': distance,
+            'data_age': datetime.datetime.now()
+        }
     else:
         if top_level_response is not 'OK':
             return {top_level_response: GMAPS_TOP_RESPONSES[top_level_response]}
