@@ -3,6 +3,7 @@ Queste sono tutte le configurazioni di dati di default per il sistema.
 """
 
 GMAPS_CONF = {
+    'airline_distance': True,
     'api_key': 'AIzaSyDV40MOxLr9fo2G1BwxEaA6WBXpZa1Fnjs',
     'departure_time': 'now',
     'extended_data': True,
