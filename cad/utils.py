@@ -1,11 +1,34 @@
 import googlemaps
+from flask import json
 from flask.globals import _app_ctx_stack, _request_ctx_stack
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.ext import mutable
 from werkzeug.exceptions import NotFound
 from werkzeug.urls import url_parse
 
+from cad import db
 from cad.exceptions import ValidationError
 from cad.static import GMAPS_CONF
+
+
+class JsonEncodedDict(db.TypeDecorator):
+    """Enables JSON storage by encoding and decoding on the fly."""
+    impl = db.Text
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return '{}'
+        else:
+            return json.dumps(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return {}
+        else:
+            return json.loads(value)
+
+
+mutable.MutableDict.associate_with(JsonEncodedDict)
 
 
 def set_field(instance: object, field: str, data) -> None:

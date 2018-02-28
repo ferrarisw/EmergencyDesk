@@ -4,7 +4,7 @@ from flask import url_for, current_app
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from cad.utils import get_fields, generic_export_data, set_field
+from cad.utils import get_fields, generic_export_data, set_field, JsonEncodedDict
 from . import db
 
 
@@ -83,6 +83,7 @@ class Event(db.Model):
     formatted_address = db.Column(db.String(128), nullable=True)
     lat = db.Column(db.Float, nullable=True)
     lng = db.Column(db.Float, nullable=True)
+    geolocation_data = db.Column(JsonEncodedDict, nullable=True)
 
     # Event Status
 
@@ -151,6 +152,9 @@ class Event(db.Model):
                     set_field(self, field, float(data[field]))
 
                 elif field is 'managing_user':
+                    set_field(self, field, int(data[field]))
+
+                elif field is 'geolocation_data':
                     set_field(self, field, int(data[field]))
 
                 elif field is 'id' or 'unit_dispatched' or 'created_by' or 'created':

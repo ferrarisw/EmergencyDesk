@@ -1,3 +1,5 @@
+import datetime
+
 import googlemaps
 
 from cad.api_v1 import api
@@ -9,10 +11,14 @@ from cad.static import GMAPS_CONF, GMAPS_TOP_RESPONSES, GMAPS_ELEMENT_RESPONSES
 @json
 def geocode(query):
     gm = googlemaps.Client(key=GMAPS_CONF['api_key'])
-    data = gm.geocode(query, language=GMAPS_CONF['language'])[0]
+    data = gm.geocode(query, language=GMAPS_CONF['language'])
 
-    geocoded_data = {}
-    geocoded_data['address_components'] = {}
+    if not data:
+        return {'Error': 'No Data Found'}
+
+    data = data[0]
+
+    geocoded_data = {'address_components': {}}
 
     for item in data['address_components']:
         for category in item['types']:
@@ -36,6 +42,8 @@ def geocode(query):
     geocoded_data['address_components']['housenumber'] = data.get("housenumber", None)
 
     geocoded_data['formatted_address'] = data['formatted_address']
+
+    geocoded_data['last_update'] = datetime.datetime.now()
 
     # GEOMETRY
 
