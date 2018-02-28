@@ -2,6 +2,8 @@ import datetime
 
 from flask import url_for, current_app
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from sqlalchemy import ForeignKey, Column
+from sqlalchemy.ext.declarative import declared_attr
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from cad.utils import get_fields, generic_export_data, set_field, JsonEncodedDict
@@ -169,7 +171,8 @@ class Event(db.Model):
         return self
 
 
-class InterventionBase(object):
+class InterventionBase(db.Model):
+    __tablename__ = 'intervention_base'
 
     # Basic Data
 
@@ -181,27 +184,17 @@ class InterventionBase(object):
     closed = db.Column(db.DateTime, nullable=True)
     closed_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
 
-    status = db.Column(db.String(128), nullable=False, default='CREATED')
+    status = db.Column(db.String(32), nullable=False, default='CREATED')
     is_editing = db.Column(db.Boolean, nullable=False, default=False)
     is_managed = db.Column(db.Boolean, nullable=False, default=False)
 
 
-class InterventionEMS(db.Model):
+class InterventionEMS(InterventionBase):
     __tablename__ = 'intervention_ems'
 
     # Basic Data
 
-    id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    updated = db.Column(db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow)
-    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    closed = db.Column(db.DateTime, nullable=True)
-    closed_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-
-    status = db.Column(db.String(128), nullable=False, default='CREATED')
-    is_editing = db.Column(db.Boolean, nullable=False, default=False)
-    is_managed = db.Column(db.Boolean, nullable=False, default=False)
+    id_ems = db.Column(db.Integer, primary_key=True)
 
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
     event = db.relationship('Event', foreign_keys=event_id)
@@ -228,6 +221,53 @@ class InterventionEMS(db.Model):
     sanitary_eval = db.Column(db.String(1), nullable=True)
     destination = db.Column(db.String(128), nullable=True)
 
+    # Inherited Data
+
+    @declared_attr
+    def id(self):
+        return Column(db.Integer, ForeignKey('intervention_base.id'))
+
+    @declared_attr
+    def created(self):
+        return Column(db.DateTime, ForeignKey('intervention_base.created'))
+
+    @declared_attr
+    def created_by(self):
+        return Column(db.Integer, ForeignKey('intervention_base.created_by'))
+
+    @declared_attr
+    def updated(self):
+        return Column(db.DateTime, ForeignKey('intervention_base.updated'))
+
+    @declared_attr
+    def updated_by(self):
+        return Column(db.Integer, ForeignKey('intervention_base.updated_by'))
+
+    @declared_attr
+    def closed(self):
+        return Column(db.DateTime, ForeignKey('intervention_base.closed'))
+
+    @declared_attr
+    def closed_by(self):
+        return Column(db.Integer, ForeignKey('intervention_base.closed_by'))
+
+    @declared_attr
+    def status(self):
+        return Column(db.String(32), ForeignKey('intervention_base.status'))
+
+    @declared_attr
+    def is_editing(self):
+        return Column(db.Boolean, ForeignKey('intervention_base.is_editing'))
+
+    @declared_attr
+    def is_managed(self):
+        return Column(db.Boolean, ForeignKey('intervention_base.is_managed'))
+
+    __mapper_args__ = {
+        'concrete': True,
+        'polymorphic_identity': 'intervention_ems'
+    }
+
 
 class Unit(db.Model):
     __tablename__ = 'units'
@@ -249,7 +289,7 @@ class Unit(db.Model):
     lng = db.Column(db.Float, nullable=True)
 
     event_dispatched = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
-    intervention_dispatched = db.Column(db.Integer, db.ForeignKey('intervention_ems.id'), nullable=True)
+    intervention_dispatched = db.Column(db.Integer, db.ForeignKey('intervention_base.id'), nullable=True)
     active = db.Column(db.Boolean, nullable=False, default=False)
 
     def get_url(self):
