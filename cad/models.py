@@ -257,9 +257,28 @@ class Unit(db.Model):
     def import_data(self, data):
         fields = get_fields(self)
 
+        update_address = update_lat_lng = False
+
         for field in fields:
             if data.get(field) is not None:
+                if field is 'lat' or 'lng':
+                    update_address = True
+                if field is 'current_address':
+                    update_lat_lng = True
                 set_field(self, field, data[field])
+
+        if update_address:
+            from cad.api_v1.utils import get_formatted_address
+            set_field(self, 'current_address', get_formatted_address('{} {}'.format(self.lat, self.lng)))
+
+        if update_lat_lng:
+            from cad.api_v1.utils import get_lat_lng
+            lat, lng = get_lat_lng(self.current_address)
+            print(self.current_address)
+            set_field(self, 'current_address', get_formatted_address(self.current_address))
+            print(self.current_address)
+            set_field(self, 'lat', lat)
+            set_field(self, 'lng', lng)
 
         return self
 

@@ -2,6 +2,34 @@
 Queste sono tutte le configurazioni di dati di default per il sistema.
 """
 
+GMAPS_CONF = {
+    'api_key': 'AIzaSyDV40MOxLr9fo2G1BwxEaA6WBXpZa1Fnjs',
+    'departure_time': 'now',
+    'extended_data': True,
+    'language': 'IT',
+    'mode': 'driving',
+    'traffic_model': 'pessimistic',
+    'units': 'metric'
+}
+
+GMAPS_TOP_RESPONSES = {
+    'OK': 'indicates the response contains a valid result',
+    'INVALID_REQUEST': 'The provided request was invalid.',
+    'MAX_ELEMENTS_EXCEEDED': 'The product of origins and destinations exceeds the per-query limit.',
+    'OVER_QUERY_LIMIT': 'The service has received too many '
+                        'requests from your application within the allowed time period.',
+    'REQUEST_DENIED': 'The service denied use of the Distance Matrix service by your application.',
+    'UNKNOWN_ERROR': 'The Distance Matrix request could not be processed '
+                     'due to a server error. The request may succeed if you try again.'
+}
+
+GMAPS_ELEMENT_RESPONSES = {
+    'OK': 'The response contains a valid result.',
+    'NOT_FOUND': 'The origin and/or destination of this pairing could not be geocoded.',
+    'ZERO_RESULTS': 'No route could be found between the origin and destination.',
+    'MAX_ROUTE_LENGTH_EXCEEDED': 'The requested route is too long and cannot be processed.'
+}
+
 EVENT_EMS_STATUS = [
     {
         'long_name': 'UNMANAGED',

@@ -1,25 +1,33 @@
+import googlemaps
 from flask.globals import _app_ctx_stack, _request_ctx_stack
+from flask_sqlalchemy import SQLAlchemy
 from werkzeug.exceptions import NotFound
 from werkzeug.urls import url_parse
 
 from cad.exceptions import ValidationError
+from cad.static import GMAPS_CONF
 
 
-def set_field(instance, field, data):
+def set_field(instance: object, field: str, data) -> None:
     if data is '' or not data:
         super.__setattr__(instance, field, None)
     else:
         super.__setattr__(instance, field, data)
 
 
-def get_fields(instance):
+def get_fields(instance: object):
     return [attr for attr in vars(instance)
             if not callable(getattr(instance, attr))
             and not attr.startswith("_")]
 
 
-def log_cad(db, created_by=None, user_agent=None, event_id=None, mission_id=None,
-            log_action=None, log_message=None):
+def log_cad(db: SQLAlchemy(),
+            created_by: int = None,
+            user_agent: str = None,
+            event_id: int = None,
+            mission_id: int = None,
+            log_action: str = None,
+            log_message: str = None, ) -> None:
     from cad.models import Log
     log = Log(created_by=created_by, user_agent=user_agent, event_id=event_id, intervention_ems_id=mission_id,
               log_action=log_action, log_message=log_message)
@@ -27,7 +35,7 @@ def log_cad(db, created_by=None, user_agent=None, event_id=None, mission_id=None
     db.session.commit()
 
 
-def generic_export_data(instance):
+def generic_export_data(instance: object) -> dict:
     data = {}
     for attr in get_fields(instance):
         data[attr] = getattr(instance, attr)
@@ -35,9 +43,11 @@ def generic_export_data(instance):
     return data
 
 
-def split_url(url, method='GET'):
-    """Returns the endpoint name and arguments that match a given URL. In
-    other words, this is the reverse of Flask's url_for()."""
+def split_url(url: str, method='GET'):
+    """
+    Returns the endpoint name and arguments that match a given URL. In
+    other words, this is the reverse of Flask's url_for().
+    """
     appctx = _app_ctx_stack.top
     reqctx = _request_ctx_stack.top
     if appctx is None:
@@ -63,3 +73,20 @@ def split_url(url, method='GET'):
     except NotFound:
         raise ValidationError('Invalid URL: ' + url)
     return result
+
+
+def get_formatted_address(query: str) -> dict:
+    gm = googlemaps.Client(key=GMAPS_CONF['api_key'])
+    geocode_results = gm.geocode(query)[0]
+
+    return geocode_results['formatted_address']
+
+
+def get_lat_lng(query: str):
+    gm = googlemaps.Client(key=GMAPS_CONF['api_key'])
+    geocode_results = gm.geocode(query)[0]
+
+    lat = geocode_results["geometry"]["location"]["lat"]
+    lng = geocode_results["geometry"]["location"]["lng"]
+
+    return lat, lng

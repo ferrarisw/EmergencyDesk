@@ -2,35 +2,7 @@ import googlemaps
 
 from cad.api_v1 import api
 from cad.decorators import json
-
-GOOGLE_MAPS_api_key = 'AIzaSyDV40MOxLr9fo2G1BwxEaA6WBXpZa1Fnjs'
-
-GMAPS_CONF = {
-    'api_key': 'AIzaSyDV40MOxLr9fo2G1BwxEaA6WBXpZa1Fnjs',
-    'departure_time': 'now',
-    'language': 'IT',
-    'mode': 'driving',
-    'traffic_model': 'pessimistic',
-    'units': 'metric'
-}
-
-GMAPS_TOP_RESPONSES = {
-    'OK': 'indicates the response contains a valid result',
-    'INVALID_REQUEST': 'The provided request was invalid.',
-    'MAX_ELEMENTS_EXCEEDED': 'The product of origins and destinations exceeds the per-query limit.',
-    'OVER_QUERY_LIMIT': 'The service has received too many '
-                        'requests from your application within the allowed time period.',
-    'REQUEST_DENIED': 'The service denied use of the Distance Matrix service by your application.',
-    'UNKNOWN_ERROR': 'The Distance Matrix request could not be processed '
-                     'due to a server error. The request may succeed if you try again.'
-}
-
-GMAPS_ELEMENT_RESPONSES = {
-    'OK': 'The response contains a valid result.',
-    'NOT_FOUND': 'The origin and/or destination of this pairing could not be geocoded.',
-    'ZERO_RESULTS': 'No route could be found between the origin and destination.',
-    'MAX_ROUTE_LENGTH_EXCEEDED': 'The requested route is too long and cannot be processed.'
-}
+from cad.static import GMAPS_CONF, GMAPS_TOP_RESPONSES, GMAPS_ELEMENT_RESPONSES
 
 
 @api.route('/utils/geocode/<string:query>', methods=['GET'])
@@ -40,42 +12,55 @@ def geocode(query):
     data = gm.geocode(query, language=GMAPS_CONF['language'])[0]
 
     geocoded_data = {}
+    geocoded_data['address_components'] = {}
 
     for item in data['address_components']:
         for category in item['types']:
             data[category] = {}
             data[category] = item['long_name']
-    geocoded_data['country'] = data.get("country", None)
-    geocoded_data['administrative_area_level_3'] = data.get("administrative_area_level_3", None)
-    geocoded_data['administrative_area_level_2'] = data.get("administrative_area_level_2", None)
-    geocoded_data['administrative_area_level_1'] = data.get("administrative_area_level_1", None)
-    geocoded_data['locality'] = data.get("locality", None)
-    geocoded_data['sublocality'] = data.get("sublocality", None)
-    geocoded_data['subpremise'] = data.get("subpremise", None)
-    geocoded_data['postal_town'] = data.get("postal_town", None)
-    geocoded_data['postal_code'] = data.get("postal_code", None)
-    geocoded_data['postal_code_suffix'] = data.get("postal_code_suffix", None)
-    geocoded_data['neighborhood'] = data.get("neighborhood", None)
-    geocoded_data['route'] = data.get("route", None)
-    geocoded_data['street_number'] = data.get('street_number', None)
-    geocoded_data['housenumber'] = data.get("housenumber", None)
-    geocoded_data['latitude'] = data.get("geometry", {}).get("location", {}).get("lat", None)
-    geocoded_data['longitude'] = data.get("geometry", {}).get("location", {}).get("lng", None)
-    geocoded_data['location_type'] = data.get("geometry", {}).get("location_type", None)
+    geocoded_data['address_components']['country'] = data.get("country", None)
+    geocoded_data['address_components']['administrative_area_level_1'] = data.get("administrative_area_level_1", None)
+    geocoded_data['address_components']['administrative_area_level_2'] = data.get("administrative_area_level_2", None)
+    geocoded_data['address_components']['administrative_area_level_3'] = data.get("administrative_area_level_3", None)
+    geocoded_data['address_components']['administrative_area_level_4'] = data.get("administrative_area_level_4", None)
+    geocoded_data['address_components']['administrative_area_level_5'] = data.get("administrative_area_level_5", None)
+    geocoded_data['address_components']['locality'] = data.get("locality", None)
+    geocoded_data['address_components']['sublocality'] = data.get("sublocality", None)
+    geocoded_data['address_components']['subpremise'] = data.get("subpremise", None)
+    geocoded_data['address_components']['postal_town'] = data.get("postal_town", None)
+    geocoded_data['address_components']['postal_code'] = data.get("postal_code", None)
+    geocoded_data['address_components']['postal_code_suffix'] = data.get("postal_code_suffix", None)
+    geocoded_data['address_components']['neighborhood'] = data.get("neighborhood", None)
+    geocoded_data['address_components']['route'] = data.get("route", None)
+    geocoded_data['address_components']['street_number'] = data.get('street_number', None)
+    geocoded_data['address_components']['housenumber'] = data.get("housenumber", None)
+
     geocoded_data['formatted_address'] = data['formatted_address']
 
+    # GEOMETRY
+
+    if GMAPS_CONF['extended_data']:
+        geocoded_data['geometry'] = {}
+        geocoded_data['geometry']['viewport'] = {}
+        geocoded_data['geometry']['location'] = {}
+        geocoded_data['geometry']['viewport']['northeast'] = {}
+        geocoded_data['geometry']['viewport']['southwest'] = {}
+
+        geocoded_data['types'] = data['types']
+
+        geocoded_data['geometry']['location_type'] = data['geometry']['location_type']
+        geocoded_data['geometry']['location']['lat'] = data['geometry']['location']['lat']
+        geocoded_data['geometry']['location']['lng'] = data['geometry']['location']['lng']
+        geocoded_data['geometry']['viewport']['northeast']['lat'] = data['geometry']['viewport']['northeast']['lat']
+        geocoded_data['geometry']['viewport']['northeast']['lng'] = data['geometry']['viewport']['southwest']['lng']
+        geocoded_data['geometry']['viewport']['southwest']['lat'] = data['geometry']['viewport']['northeast']['lat']
+        geocoded_data['geometry']['viewport']['southwest']['lng'] = data['geometry']['viewport']['southwest']['lng']
+    else:
+        geocoded_data['address_components']['lat'] = data.get("geometry", {}).get("location", {}).get("lat", None)
+        geocoded_data['address_components']['lng'] = data.get("geometry", {}).get("viewport", {}).get("lng", None)
+        geocoded_data['address_components']['location_type'] = data.get("geometry", {}).get("location_type", None)
+
     return geocoded_data
-
-
-@api.route('/utils/formatted_address/<string:query>', methods=['GET'])
-@json
-def get_formatted_address(query):
-    gm = googlemaps.Client(key=GMAPS_CONF['api_key'])
-    geocode_results = gm.geocode(query)[0]
-
-    return {
-        'formatted_address': geocode_results['formatted_address'],
-    }
 
 
 @api.route('/utils/distance/<string:origin>/<string:destination>', methods=['GET'])
