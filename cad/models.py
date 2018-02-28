@@ -275,8 +275,7 @@ class Unit(db.Model):
     # Basic Data
 
     id = db.Column(db.Integer, primary_key=True)
-    status = db.Column(db.String(64), default='OPERATIVE'
-                                              '')
+    status = db.Column(db.String(64), default='OPERATIVE')
     created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
 
