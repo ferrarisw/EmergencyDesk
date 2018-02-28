@@ -80,7 +80,8 @@ def distance(origin, destination):
                                          mode=GMAPS_CONF['mode'],
                                          units=GMAPS_CONF['units'],
                                          departure_time=GMAPS_CONF['departure_time'],
-                                         traffic_model=GMAPS_CONF['traffic_model'])
+                                         traffic_model=GMAPS_CONF['traffic_model'],
+                                         language=GMAPS_CONF['language'])
 
     top_level_response = distance_matrix['status']
     element_level_response = distance_matrix['rows'][0]['elements'][0]['status']
@@ -90,18 +91,41 @@ def distance(origin, destination):
         duration = {}
         duration_in_traffic = {}
         distance = {}
+        airline_distance = {}
 
-        duration['value'] = distance_matrix['rows'][0]['elements'][0]['duration']['value']
+        duration['meters'] = distance_matrix['rows'][0]['elements'][0]['duration']['value']
+        duration['minutes'] = int(distance_matrix['rows'][0]['elements'][0]['duration']['value'] / 60)
         duration['text'] = distance_matrix['rows'][0]['elements'][0]['duration']['text']
-        duration_in_traffic['value'] = distance_matrix['rows'][0]['elements'][0]['duration_in_traffic']['value']
+
+        duration_in_traffic['meters'] = distance_matrix['rows'][0]['elements'][0]['duration_in_traffic']['value']
+        duration_in_traffic['minutes'] = int(
+            distance_matrix['rows'][0]['elements'][0]['duration_in_traffic']['value'] / 60)
         duration_in_traffic['text'] = distance_matrix['rows'][0]['elements'][0]['duration_in_traffic']['text']
-        distance['value'] = distance_matrix['rows'][0]['elements'][0]['distance']['value']
+
+        distance['meters'] = distance_matrix['rows'][0]['elements'][0]['distance']['value']
+        distance['km'] = distance_matrix['rows'][0]['elements'][0]['distance']['value'] / 1000
         distance['text'] = distance_matrix['rows'][0]['elements'][0]['distance']['text']
 
+        if GMAPS_CONF['airline_distance']:
+            import geopy.distance
+
+            from cad.utils import get_lat_lng, get_compass_bearing
+            coords_1 = get_lat_lng(origin)
+            coords_2 = get_lat_lng(destination)
+            compass_bearing = get_compass_bearing(coords_1, coords_2)
+
+            airline_distance['meters'] = round(geopy.distance.vincenty(coords_1, coords_2).meters, 2)
+            airline_distance['km'] = round(geopy.distance.vincenty(coords_1, coords_2).km, 2)
+            airline_distance['miles'] = round(geopy.distance.vincenty(coords_1, coords_2).miles, 2)
+            airline_distance['compass_bearing'] = round(compass_bearing, 2)
+
         return {
+            'origin_address': distance_matrix['origin_addresses'][0],
+            'destination_address': distance_matrix['destination_addresses'][0],
             'duration': duration,
             'duration_in_traffic': duration_in_traffic,
             'distance': distance,
+            'airline distance': airline_distance,
             'data_age': datetime.datetime.now()
         }
     else:

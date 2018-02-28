@@ -113,3 +113,22 @@ def get_lat_lng(query: str):
     lng = geocode_results["geometry"]["location"]["lng"]
 
     return lat, lng
+
+
+def get_compass_bearing(coords_1: tuple, coords_2: tuple) -> float:
+    import math
+    lat1 = math.radians(coords_1[0])
+    lat2 = math.radians(coords_2[0])
+
+    diffLong = math.radians(coords_2[1] - coords_1[1])
+
+    x = math.sin(diffLong) * math.cos(lat2)
+    y = math.cos(lat1) * math.sin(lat2) - \
+        (math.sin(lat1) * math.cos(lat2) * math.cos(diffLong))
+
+    initial_bearing = math.atan2(x, y)
+
+    initial_bearing = math.degrees(initial_bearing)
+    compass_bearing = (initial_bearing + 360) % 360
+
+    return compass_bearing
