@@ -55,3 +55,21 @@ def edit_unit(id):
     log_cad(db, created_by='System', log_action='Unit Data Modified')
 
     return {}
+
+
+@api.route('/units_live/<int:id>', methods=['PUT'])
+@json
+def edit_unit_live(id):
+    """
+    This API allows to edit unit data without taking track in the logs
+    Use this, for example, for continuously edit the position of the unit from a client software
+
+    :param id: The ID of the unit to edit
+    :return: None
+    """
+    unit = Unit.query.get_or_404(id)
+    unit.import_data(request.json)
+    db.session.add(unit)
+    db.session.commit()
+
+    return {}

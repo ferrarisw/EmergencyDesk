@@ -338,23 +338,23 @@ INTERVENTION_EMS_EVAL = [
     }
 ]
 
-INTERVENTION_EMS_OUTCOME = {
-    1: {
+INTERVENTION_EMS_OUTCOME = [
+    {
         'long_name': 'Patient to the hospital',
         'short_name': 'TO_H',
         'order': 1
     },
-    2: {
+    {
         'long_name': 'On place treatment',
         'short_name': 'ON_PLACE_TR',
         'order': 2
     },
-    3: {
+    {
         'long_name': 'Abort',
         'short_name': 'ABORT',
         'order': 50
     }
-}
+]
 
 LOGS = {
     'EVENT_LOG': [
