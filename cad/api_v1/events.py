@@ -72,17 +72,15 @@ def new_event():
     db.session.add(event)
     db.session.commit()
 
+    log_cad(db,
+            event_id=event.id,
+            log_action='Event Created')
+
     if request.json:
         event = Event.query.get_or_404(event.id)
         event.import_data(request.json)
         db.session.add(event)
         db.session.commit()
-
-    log_cad(db,
-            created_by=1,
-            event_id=event.id,
-            log_action='Event Created',
-            log_message=str(request.json))
 
     return {}, 201, {'Location': event.get_url()}
 
@@ -94,11 +92,5 @@ def edit_event(id):
     event.import_data(request.json)
     db.session.add(event)
     db.session.commit()
-
-    log_cad(db,
-            created_by=1,
-            event_id=event.id,
-            log_action='Event Data Modified',
-            log_message=str(request.json))
 
     return {}

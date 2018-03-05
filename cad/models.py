@@ -4,7 +4,7 @@ from flask import url_for, current_app
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from cad.utils import get_fields, generic_export_data, set_field, JsonEncodedDict
+from cad.utils import get_fields, generic_export_data, set_field, JsonEncodedDict, log_cad
 from . import db
 
 
@@ -42,15 +42,23 @@ class User(db.Model):
     def import_data(self, data):
         fields = get_fields(self)
 
+        updated = False
+
         for field in fields:
             if data.get(field) is not None:
 
-                '''Gestisce il cambiamento della password'''
+                updated = True
+
                 if field is 'password_hash' or 'password':
                     self.set_password(data[field])
 
                 else:  # Caso generico
                     set_field(self, field, data[field])
+
+        if updated:
+            log_cad(db=db,
+                    log_action='User Data Modified',
+                    log_message=str(data))
 
         return self
 
@@ -116,12 +124,13 @@ class Event(db.Model):
     def import_data(self, data):
         fields = get_fields(self)
 
+        updated = False
+
         for field in fields:
             if data.get(field) is not None:
 
-                '''
-                Gestisce lo stato di attivita' dell'evento
-                '''
+                updated = True
+
                 if field is 'active':
                     if data[field] == 'True':
                         set_field(self, 'active', True)
@@ -163,6 +172,12 @@ class Event(db.Model):
 
                 else:  # Caso generico
                     set_field(self, field, data[field])
+
+        if updated:
+            log_cad(db=db,
+                    event_id=self.id,
+                    log_action='Event Data Modified',
+                    log_message=str(data))
 
         return self
 
@@ -218,6 +233,9 @@ class InterventionEMS(db.Model):
 
         for field in fields:
             if data.get(field) is not None:
+
+                updated = True
+
                 if field in ['active', 'alarmed', 'blu_event', 'is_editing', 'is_managed']:
                     if data[field] == 'True':
                         set_field(self, field, True)
@@ -247,6 +265,11 @@ class InterventionEMS(db.Model):
 
         if updated:
             set_field(self, 'updated', datetime.datetime.now())
+            log_cad(db=db,
+                    intervention_ems_id=self.id,
+                    event_id=self.event_id,
+                    log_action='InterventionEMS Data Modified',
+                    log_message=str(data))
 
         return self
 
@@ -254,6 +277,12 @@ class InterventionEMS(db.Model):
         if data.get('phase') is not None and data.get('phase') in ['IN', 'PA', 'AR', 'CA', 'FIN']:
             set_field(self, field='date_' + data.get('phase'), data=datetime.datetime.now())
             set_field(self, 'updated', datetime.datetime.now())
+            log_cad(db=db,
+                    priority=2,
+                    event_id=self.event_id,
+                    intervention_ems_id=self.id,
+                    log_action='InterventionEMS Phase Modified',
+                    log_message="{" + "'date_" + data.get('phase') + ": '" + str(datetime.datetime.now()) + "'}")
 
 
 class Unit(db.Model):
@@ -284,13 +313,15 @@ class Unit(db.Model):
     def export_data(self):
         return generic_export_data(self)
 
-    def import_data(self, data):
+    def import_data(self, data, log=False):
         fields = get_fields(self)
 
+        updated = False
         update_address = update_lat_lng = False
 
         for field in fields:
             if data.get(field) is not None:
+                updated = True
                 if field in ['lat', 'lng']:
                     update_address = True
                     continue
@@ -300,9 +331,11 @@ class Unit(db.Model):
                         set_field(self, 'lat', None)
                         set_field(self, 'lng', None)
                         set_field(self, 'current_address', None)
-                        continue
                     else:
+                        set_field(self, 'current_address', data[field])
                         update_lat_lng = True
+
+                    continue
 
                 elif field in ['active']:
                     if data[field] is 'True':
@@ -325,6 +358,14 @@ class Unit(db.Model):
             set_field(self, 'lat', lat)
             set_field(self, 'lng', lng)
 
+        if updated and not log:
+            log_cad(db=db,
+                    priority=1,
+                    intervention_ems_id=self.intervention_dispatched,
+                    event_id=self.event_dispatched,
+                    log_action='Unit Data Modified',
+                    log_message=str(data))
+
         return self
 
 
@@ -336,10 +377,9 @@ class Log(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     priority = db.Column(db.Integer, default=0)
     created = db.Column(db.DateTime, default=datetime.datetime.now(), nullable=False)
-    created_by = db.Column(db.String(128))
-    user_agent = db.Column(db.Integer, db.ForeignKey('users.id'))
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
     intervention_ems_id = db.Column(db.Integer, db.ForeignKey('interventions_ems.id'), nullable=True)
+    unit_id = db.Column(db.Integer, db.ForeignKey('units.id'), nullable=True)
     log_action = db.Column(db.String(128), nullable=False, default='')
     log_message = db.Column(db.Text, nullable=True)
 
@@ -348,6 +388,3 @@ class Log(db.Model):
 
     def export_data(self):
         return generic_export_data(self)
-
-    def import_data(self, data):
-        return self

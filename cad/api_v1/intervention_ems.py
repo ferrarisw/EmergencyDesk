@@ -73,13 +73,16 @@ def new_intervention_ems():
     db.session.add(intervention_ems)
     db.session.commit()
 
+    log_cad(db,
+            priority=1,
+            intervention_ems_id=intervention_ems.id,
+            log_action='InterventionEMS Created')
+
     if request.json:
         intervention_ems = InterventionEMS.query.get_or_404(intervention_ems.id)
         intervention_ems.import_data(request.json)
         db.session.add(intervention_ems)
         db.session.commit()
-
-    log_cad(db, created_by=1, intervention_ems_id=intervention_ems.id, log_action='InterventionEMS Created')
 
     return {}, 201, {'Location': intervention_ems.get_url()}
 
@@ -92,12 +95,6 @@ def edit_intervention_ems(intervention_ems_id):
     db.session.add(intervention_ems)
     db.session.commit()
 
-    log_cad(db,
-            created_by=1,
-            intervention_ems_id=intervention_ems.id,
-            log_action='InterventionEMS Data Modified',
-            log_message=str(request.json))
-
     return {}
 
 
@@ -108,10 +105,5 @@ def edit_intervention_ems_phase(intervention_ems_id):
     intervention_ems.update_phase(request.json)
     db.session.add(intervention_ems)
     db.session.commit()
-
-    log_cad(db,
-            created_by=1,
-            intervention_ems_id=intervention_ems.id,
-            log_action='InterventionEMS Phase Modified')
 
     return {}

@@ -33,14 +33,15 @@ def new_user():
     db.session.add(user)
     db.session.commit()
 
+    log_cad(db=db,
+            priority=1,
+            log_action='User Created')
+
     if request.json:
         user = User.query.get_or_404(user.id)
         user.import_data(request.json)
         db.session.add(user)
         db.session.commit()
-
-    log_cad(db, created_by=1, log_action='User Created',
-            log_message=str(request.json))
 
     return {}, 201, {'Location': user.get_url()}
 
@@ -52,8 +53,4 @@ def edit_user(id):
     user.import_data(request.json)
     db.session.add(user)
     db.session.commit()
-
-    log_cad(db, created_by=1, log_action='User Data Modified',
-            log_message=str(request.json))
-
     return {}

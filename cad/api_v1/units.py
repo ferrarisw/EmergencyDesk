@@ -33,13 +33,15 @@ def new_unit():
     db.session.add(unit)
     db.session.commit()
 
+    log_cad(db=db,
+            priority=1,
+            log_action='Unit Created')
+
     if request.json:
         unit = Unit.query.get_or_404(unit.id)
         unit.import_data(request.json)
         db.session.add(unit)
         db.session.commit()
-
-    log_cad(db, created_by=1, log_action='Unit Created')
 
     return {}, 201, {'Location': unit.get_url()}
 
@@ -48,13 +50,9 @@ def new_unit():
 @json
 def edit_unit(unit_id):
     unit = Unit.query.get_or_404(unit_id)
-    unit.import_data(request.json)
+    unit.import_data(request.json, log=True)
     db.session.add(unit)
     db.session.commit()
-    log_cad(db,
-            created_by=1,
-            log_action='Unit Data Modified',
-            log_message=str(request.json))
 
     return {}
 
@@ -70,7 +68,7 @@ def edit_unit_live(id):
     :return: None
     """
     unit = Unit.query.get_or_404(id)
-    unit.import_data(request.json)
+    unit.import_data(request.json, log=False)
     db.session.add(unit)
     db.session.commit()
 
