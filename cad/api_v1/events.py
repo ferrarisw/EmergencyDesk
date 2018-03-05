@@ -3,7 +3,7 @@ from flask import request
 from cad import db
 from cad.api_v1 import api
 from cad.decorators import json
-from cad.models import Event
+from cad.models import Event, InterventionEMS
 from cad.utils import log_cad
 
 
@@ -83,6 +83,49 @@ def new_event():
         db.session.commit()
 
     return {}, 201, {'Location': event.get_url()}
+
+
+@api.route('/events/<int:event_id>/create_interventions_ems', methods=['POST'])
+@json
+def new_intervention_ems(event_id):
+    event = Event.query.get_or_404(event_id)
+    intervention_ems = InterventionEMS(event_id=event_id, unit_progressive=event.unit_dispatched + 1)
+
+    db.session.add(intervention_ems)
+    db.session.commit()
+
+    intervention_ems = InterventionEMS.query.get_or_404(intervention_ems.id)
+
+    log_cad(db,
+            priority=1,
+            event_id=event.id,
+            intervention_ems_id=intervention_ems.id,
+            log_action='InterventionEMS Created for Event ' + str(event_id))
+
+    event.import_data({'unit_dispatched': event.unit_dispatched + 1})
+    db.session.add(event)
+    db.session.commit()
+
+    if request.json:
+        intervention_ems.import_data(request.json)
+        db.session.add(intervention_ems)
+        db.session.commit()
+
+    return {}, 201, {'Location': event.get_url()}
+
+
+@api.route('/events/<event_id>/interventions_ems', methods=['GET'])
+@json
+def get_invervention_ems_by_event_id(event_id):
+    return {'interventions_ems': [intervention_ems.get_url() for intervention_ems in
+                                  InterventionEMS.query.filter_by(event_id=event_id).all()]}
+
+
+@api.route('/events/<event_id>/interventions_ems_raw', methods=['GET'])
+@json
+def get_invervention_ems_raw_by_event_id(event_id):
+    return {'interventions_ems_raw': [intervention_ems.export_data() for intervention_ems in
+                                      InterventionEMS.query.filter_by(event_id=event_id).all()]}
 
 
 @api.route('/events/<int:id>', methods=['PUT'])

@@ -4,7 +4,6 @@ from cad import db
 from cad.api_v1 import api
 from cad.decorators import json
 from cad.models import InterventionEMS
-from cad.utils import log_cad
 
 
 @api.route('/interventions_ems/', methods=['GET'])
@@ -64,27 +63,6 @@ def get_intervention_ems(id):
     :return: The complete dataset of the desired intervention_ems
     """
     return InterventionEMS.query.get_or_404(id).export_data()
-
-
-@api.route('/interventions_ems/', methods=['POST'])
-@json
-def new_intervention_ems():
-    intervention_ems = InterventionEMS()
-    db.session.add(intervention_ems)
-    db.session.commit()
-
-    log_cad(db,
-            priority=1,
-            intervention_ems_id=intervention_ems.id,
-            log_action='InterventionEMS Created')
-
-    if request.json:
-        intervention_ems = InterventionEMS.query.get_or_404(intervention_ems.id)
-        intervention_ems.import_data(request.json)
-        db.session.add(intervention_ems)
-        db.session.commit()
-
-    return {}, 201, {'Location': intervention_ems.get_url()}
 
 
 @api.route('/interventions_ems/<intervention_ems_id>', methods=['PUT'])
