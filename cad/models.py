@@ -2,8 +2,6 @@ import datetime
 
 from flask import url_for, current_app
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from sqlalchemy import ForeignKey, Column
-from sqlalchemy.ext.declarative import declared_attr
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from cad.utils import get_fields, generic_export_data, set_field, JsonEncodedDict
@@ -65,9 +63,9 @@ class Event(db.Model):
     id = db.Column(db.Integer, nullable=False, primary_key=True)
     active = db.Column(db.Boolean, nullable=False, default=True)
 
-    created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
+    created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now())
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, default=1)
-    updated = db.Column(db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow)
+    updated = db.Column(db.DateTime, nullable=True, onupdate=datetime.datetime.now())
     updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     closed = db.Column(db.DateTime, nullable=True)
     closed_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
@@ -108,8 +106,6 @@ class Event(db.Model):
 
     unit_dispatched = db.Column(db.Integer, default=0)
     notes = db.Column(db.String(255), nullable=True)
-
-    interventions = db.relationship("InterventionEMS", back_populates="event")
 
     def get_url(self):
         return url_for('api.get_event', id=self.id, _external=True)
@@ -171,35 +167,24 @@ class Event(db.Model):
         return self
 
 
-class InterventionBase(db.Model):
-    __tablename__ = 'intervention_base'
+class InterventionEMS(db.Model):
+    __tablename__ = 'interventions_ems'
 
     # Basic Data
-
     id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    updated = db.Column(db.DateTime, nullable=True, onupdate=datetime.datetime.utcnow)
-    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    closed = db.Column(db.DateTime, nullable=True)
-    closed_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
 
+    created = db.Column(db.DateTime, default=datetime.datetime.now())
+    updated = db.Column(db.DateTime, nullable=True, default=datetime.datetime.now())
+    closed = db.Column(db.DateTime, nullable=True)
+
+    active = db.Column(db.Boolean, nullable=False, default=True)
     status = db.Column(db.String(32), nullable=False, default='CREATED')
     is_editing = db.Column(db.Boolean, nullable=False, default=False)
     is_managed = db.Column(db.Boolean, nullable=False, default=False)
-
-
-class InterventionEMS(InterventionBase):
-    __tablename__ = 'intervention_ems'
-
-    # Basic Data
-
-    id_ems = db.Column(db.Integer, primary_key=True)
+    is_closed = db.Column(db.Boolean, nullable=False, default=True)
 
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
-    event = db.relationship('Event', foreign_keys=event_id)
     unit_id = db.Column(db.Integer, db.ForeignKey('units.id'), nullable=True)
-    unit = db.relationship('Unit', foreign_keys=unit_id)
 
     unit_call_sign = db.Column(db.String(64), db.ForeignKey('units.call_sign'))
     unit_profile = db.Column(db.String(64))
@@ -215,58 +200,60 @@ class InterventionEMS(InterventionBase):
     date_AR = db.Column(db.DateTime)
     date_CA = db.Column(db.DateTime)
     date_FIN = db.Column(db.DateTime)
-    last_update = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
     outcome = db.Column(db.String(128), nullable=True)
     sanitary_eval = db.Column(db.String(1), nullable=True)
     destination = db.Column(db.String(128), nullable=True)
 
-    # Inherited Data
+    def get_url(self):
+        return url_for('api.get_intervention_ems', id=self.id, _external=True)
 
-    @declared_attr
-    def id(self):
-        return Column(db.Integer, ForeignKey('intervention_base.id'))
+    def export_data(self):
+        return generic_export_data(self)
 
-    @declared_attr
-    def created(self):
-        return Column(db.DateTime, ForeignKey('intervention_base.created'))
+    def import_data(self, data):
+        fields = get_fields(self)
 
-    @declared_attr
-    def created_by(self):
-        return Column(db.Integer, ForeignKey('intervention_base.created_by'))
+        updated = False
 
-    @declared_attr
-    def updated(self):
-        return Column(db.DateTime, ForeignKey('intervention_base.updated'))
+        for field in fields:
+            if data.get(field) is not None:
+                if field in ['active', 'alarmed', 'blu_event', 'is_editing', 'is_managed']:
+                    if data[field] == 'True':
+                        set_field(self, field, True)
+                    elif data[field] == 'False':
+                        set_field(self, field, False)
+                    continue
 
-    @declared_attr
-    def updated_by(self):
-        return Column(db.Integer, ForeignKey('intervention_base.updated_by'))
+                elif field in ['is_closed']:
+                    if data[field] == 'True':
+                        set_field(self, field, True)
+                        set_field(self, 'closed', datetime.datetime.now())
+                        set_field(self, 'active', False)
+                    elif data[field] == 'False':
+                        set_field(self, field, False)
+                    continue
 
-    @declared_attr
-    def closed(self):
-        return Column(db.DateTime, ForeignKey('intervention_base.closed'))
+                elif field in ['date_IN', 'date_PA', 'date_AR', 'date_CA', 'date_FIN']:
+                    from dateutil import parser
+                    set_field(self, field, parser.parse(data[field]))
+                    continue
 
-    @declared_attr
-    def closed_by(self):
-        return Column(db.Integer, ForeignKey('intervention_base.closed_by'))
+                elif field in ['event_id', 'unit_id', 'unit_progressive']:
+                    continue
 
-    @declared_attr
-    def status(self):
-        return Column(db.String(32), ForeignKey('intervention_base.status'))
+                else:
+                    set_field(self, field, data[field])
 
-    @declared_attr
-    def is_editing(self):
-        return Column(db.Boolean, ForeignKey('intervention_base.is_editing'))
+        if updated:
+            set_field(self, 'updated', datetime.datetime.now())
 
-    @declared_attr
-    def is_managed(self):
-        return Column(db.Boolean, ForeignKey('intervention_base.is_managed'))
+        return self
 
-    __mapper_args__ = {
-        'concrete': True,
-        'polymorphic_identity': 'intervention_ems'
-    }
+    def update_phase(self, data):
+        if data.get('phase') is not None and data.get('phase') in ['IN', 'PA', 'AR', 'CA', 'FIN']:
+            set_field(self, field='date_' + data.get('phase'), data=datetime.datetime.now())
+            set_field(self, 'updated', datetime.datetime.now())
 
 
 class Unit(db.Model):
@@ -276,7 +263,7 @@ class Unit(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     status = db.Column(db.String(64), default='OPERATIVE')
-    created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created = db.Column(db.DateTime, default=datetime.datetime.now())
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     call_sign = db.Column(db.String(64))
@@ -288,7 +275,7 @@ class Unit(db.Model):
     lng = db.Column(db.Float, nullable=True)
 
     event_dispatched = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
-    intervention_dispatched = db.Column(db.Integer, db.ForeignKey('intervention_base.id'), nullable=True)
+    intervention_dispatched = db.Column(db.Integer, db.ForeignKey('interventions_ems.id'), nullable=True)
     active = db.Column(db.Boolean, nullable=False, default=False)
 
     def get_url(self):
@@ -304,22 +291,37 @@ class Unit(db.Model):
 
         for field in fields:
             if data.get(field) is not None:
-                if field is 'lat' or 'lng':
+                if field in ['lat', 'lng']:
                     update_address = True
-                if field is 'current_address':
-                    update_lat_lng = True
-                set_field(self, field, data[field])
+                    continue
+
+                elif field in ['current_address']:
+                    if data.get(field) is '':
+                        set_field(self, 'lat', None)
+                        set_field(self, 'lng', None)
+                        set_field(self, 'current_address', None)
+                        continue
+                    else:
+                        update_lat_lng = True
+
+                elif field in ['active']:
+                    if data[field] is 'True':
+                        set_field(self, field, True)
+                    elif data[field] is 'False':
+                        set_field(self, field, False)
+                    continue
+
+                else:
+                    set_field(self, field, data[field])
 
         if update_address:
-            from cad.api_v1.utils import get_formatted_address
+            from cad.utils import get_formatted_address
             set_field(self, 'current_address', get_formatted_address('{} {}'.format(self.lat, self.lng)))
 
         if update_lat_lng:
-            from cad.api_v1.utils import get_lat_lng
+            from cad.utils import get_lat_lng, get_formatted_address
             lat, lng = get_lat_lng(self.current_address)
-            print(self.current_address)
             set_field(self, 'current_address', get_formatted_address(self.current_address))
-            print(self.current_address)
             set_field(self, 'lat', lat)
             set_field(self, 'lng', lng)
 
@@ -332,11 +334,12 @@ class Log(db.Model):
     # Basic Data
 
     id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, default=datetime.datetime.utcnow, nullable=False)
+    priority = db.Column(db.Integer, default=0)
+    created = db.Column(db.DateTime, default=datetime.datetime.now(), nullable=False)
     created_by = db.Column(db.String(128))
     user_agent = db.Column(db.Integer, db.ForeignKey('users.id'))
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
-    intervention_ems_id = db.Column(db.Integer, db.ForeignKey('intervention_ems.id'), nullable=True)
+    intervention_ems_id = db.Column(db.Integer, db.ForeignKey('interventions_ems.id'), nullable=True)
     log_action = db.Column(db.String(128), nullable=False, default='')
     log_message = db.Column(db.Text, nullable=True)
 
