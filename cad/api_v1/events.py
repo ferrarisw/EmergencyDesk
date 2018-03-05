@@ -78,7 +78,11 @@ def new_event():
         db.session.add(event)
         db.session.commit()
 
-    log_cad(db, created_by='System', event_id=event.id, log_action='Event Created')
+    log_cad(db,
+            created_by=1,
+            event_id=event.id,
+            log_action='Event Created',
+            log_message=str(request.json))
 
     return {}, 201, {'Location': event.get_url()}
 
@@ -91,6 +95,10 @@ def edit_event(id):
     db.session.add(event)
     db.session.commit()
 
-    log_cad(db, created_by='System', event_id=event.id, log_action='Event Data Modified')
+    log_cad(db,
+            created_by=1,
+            event_id=event.id,
+            log_action='Event Data Modified',
+            log_message=str(request.json))
 
     return {}

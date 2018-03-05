@@ -39,20 +39,22 @@ def new_unit():
         db.session.add(unit)
         db.session.commit()
 
-    log_cad(db, created_by='System', log_action='Unit Created')
+    log_cad(db, created_by=1, log_action='Unit Created')
 
     return {}, 201, {'Location': unit.get_url()}
 
 
-@api.route('/units/<int:id>', methods=['PUT'])
+@api.route('/units/<unit_id>', methods=['PUT'])
 @json
-def edit_unit(id):
-    unit = Unit.query.get_or_404(id)
+def edit_unit(unit_id):
+    unit = Unit.query.get_or_404(unit_id)
     unit.import_data(request.json)
     db.session.add(unit)
     db.session.commit()
-
-    log_cad(db, created_by='System', log_action='Unit Data Modified')
+    log_cad(db,
+            created_by=1,
+            log_action='Unit Data Modified',
+            log_message=str(request.json))
 
     return {}
 

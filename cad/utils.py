@@ -45,15 +45,16 @@ def get_fields(instance: object):
 
 
 def log_cad(db: SQLAlchemy(),
+            priority: int = 1,
             created_by: int = None,
             user_agent: str = None,
             event_id: int = None,
-            mission_id: int = None,
+            intervention_ems_id: int = None,
             log_action: str = None,
             log_message: str = None, ) -> None:
     from cad.models import Log
-    log = Log(created_by=created_by, user_agent=user_agent, event_id=event_id, intervention_ems_id=mission_id,
-              log_action=log_action, log_message=log_message)
+    log = Log(priority=priority, created_by=created_by, user_agent=user_agent, event_id=event_id,
+              intervention_ems_id=intervention_ems_id, log_action=log_action, log_message=log_message)
     db.session.add(log)
     db.session.commit()
 
@@ -101,7 +102,6 @@ def split_url(url: str, method='GET'):
 def get_formatted_address(query: str) -> dict:
     gm = googlemaps.Client(key=GMAPS_CONF['api_key'])
     geocode_results = gm.geocode(query)[0]
-
     return geocode_results['formatted_address']
 
 

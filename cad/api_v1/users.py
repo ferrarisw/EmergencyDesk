@@ -39,7 +39,8 @@ def new_user():
         db.session.add(user)
         db.session.commit()
 
-    log_cad(db, created_by='System', log_action='User Created')
+    log_cad(db, created_by=1, log_action='User Created',
+            log_message=str(request.json))
 
     return {}, 201, {'Location': user.get_url()}
 
@@ -52,6 +53,7 @@ def edit_user(id):
     db.session.add(user)
     db.session.commit()
 
-    log_cad(db, created_by='System', log_action='User Data Modified')
+    log_cad(db, created_by=1, log_action='User Data Modified',
+            log_message=str(request.json))
 
     return {}

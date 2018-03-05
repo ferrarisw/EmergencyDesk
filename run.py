@@ -47,6 +47,6 @@ if __name__ == '__main__':
 
             init_db()
 
-            log_cad(db, created_by='System', log_action='User Created')
+            log_cad(db, created_by=1, log_action='User Created')
 
     app.run()
