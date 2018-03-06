@@ -46,6 +46,7 @@ def get_fields(instance: object):
 
 def log_cad(db: SQLAlchemy(),
             priority: int = 1,
+            mode: str = 'INFO',
             event_id: int = None,
             intervention_ems_id: int = None,
             unit_id: int = None,
@@ -53,6 +54,7 @@ def log_cad(db: SQLAlchemy(),
             log_message: str = None, ) -> None:
     from cad.models import Log
     log = Log(priority=priority,
+              mode=mode,
               event_id=event_id,
               intervention_ems_id=intervention_ems_id,
               unit_id=unit_id,

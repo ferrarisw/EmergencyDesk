@@ -257,9 +257,13 @@ class InterventionEMS(db.Model):
                     set_field(self, field, parser.parse(data[field]))
                     continue
 
-                elif field in ['event_id', 'unit_id', 'unit_progressive']:
+                elif field in ['id', 'event_id', 'unit_id', 'unit_progressive']:
                     log_cad(db=db,
                             priority=5,
+                            mode='WARN',
+                            event_id=self.event_id,
+                            intervention_ems_id=self.id,
+                            unit_id=self.unit_id,
                             log_action='Try to edit non editable data',
                             log_message='{' + field + ': ' + data[field] + '}')
                     continue
@@ -270,8 +274,9 @@ class InterventionEMS(db.Model):
         if updated:
             set_field(self, 'updated', datetime.datetime.now())
             log_cad(db=db,
-                    intervention_ems_id=self.id,
                     event_id=self.event_id,
+                    intervention_ems_id=self.id,
+                    unit_id=self.unit_id,
                     log_action='InterventionEMS Data Modified',
                     log_message=str(data))
 
@@ -380,6 +385,7 @@ class Log(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     priority = db.Column(db.Integer, default=0)
+    mode = db.Column(db.String(5), nullable=False, default='INFO')
     created = db.Column(db.DateTime, default=datetime.datetime.now(), nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
     intervention_ems_id = db.Column(db.Integer, db.ForeignKey('interventions_ems.id'), nullable=True)
