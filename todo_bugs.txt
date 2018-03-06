@@ -1,0 +1,8 @@
+BUG NOTI
+
+INTERVENTION EMS
+- Quando modifico un InterventionEMS e provo a settare un campo non modificabile (es. event_id) viene comunque prodotto
+    un log per l'avvenuta modifica. Il log di segnalazione del tentativo di edit viene correttamente riportato
+    #log #interventionsEms
+
+-
