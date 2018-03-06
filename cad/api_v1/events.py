@@ -100,9 +100,11 @@ def new_intervention_ems(event_id):
             priority=1,
             event_id=event.id,
             intervention_ems_id=intervention_ems.id,
-            log_action='InterventionEMS Created for Event ' + str(event_id))
+            log_action='InterventionEMS ' + intervention_ems.id + ' Created for Event ' + str(event_id))
 
-    event.import_data({'unit_dispatched': event.unit_dispatched + 1})
+    # event.import_data({'unit_dispatched': event.unit_dispatched + 1})
+    event.unit_dispatched += 1
+    event.interventions_ems.append(intervention_ems)
     db.session.add(event)
     db.session.commit()
 

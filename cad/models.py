@@ -112,6 +112,7 @@ class Event(db.Model):
     criticity = db.Column(db.String(1), nullable=True)
     formatted_code = db.Column(db.String(5), nullable=True)
 
+    interventions_ems = db.relationship('InterventionEMS', backref='event')
     unit_dispatched = db.Column(db.Integer, default=0)
     notes = db.Column(db.String(255), nullable=True)
 
@@ -196,7 +197,6 @@ class InterventionEMS(db.Model):
     status = db.Column(db.String(32), nullable=False, default='CREATED')
     is_editing = db.Column(db.Boolean, nullable=False, default=False)
     is_managed = db.Column(db.Boolean, nullable=False, default=False)
-    is_closed = db.Column(db.Boolean, nullable=False, default=True)
 
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
     unit_id = db.Column(db.Integer, db.ForeignKey('units.id'), nullable=True)
@@ -236,21 +236,21 @@ class InterventionEMS(db.Model):
 
                 updated = True
 
-                if field in ['active', 'alarmed', 'blu_event', 'is_editing', 'is_managed']:
+                if field in ['alarmed', 'blu_event', 'is_editing', 'is_managed']:
                     if data[field] == 'True':
                         set_field(self, field, True)
                     elif data[field] == 'False':
                         set_field(self, field, False)
                     continue
 
-                elif field in ['is_closed']:
+                elif field in ['active']:
                     if data[field] == 'True':
                         set_field(self, field, True)
+
+                    elif data[field] == 'False':
                         set_field(self, 'closed', datetime.datetime.now())
                         set_field(self, 'active', False)
-                    elif data[field] == 'False':
-                        set_field(self, field, False)
-                    continue
+                        continue
 
                 elif field in ['date_IN', 'date_PA', 'date_AR', 'date_CA', 'date_FIN']:
                     from dateutil import parser
@@ -258,6 +258,10 @@ class InterventionEMS(db.Model):
                     continue
 
                 elif field in ['event_id', 'unit_id', 'unit_progressive']:
+                    log_cad(db=db,
+                            priority=5,
+                            log_action='Try to edit non editable data',
+                            log_message='{' + field + ': ' + data[field] + '}')
                     continue
 
                 else:
@@ -305,7 +309,7 @@ class Unit(db.Model):
 
     event_dispatched = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
     intervention_dispatched = db.Column(db.Integer, db.ForeignKey('interventions_ems.id'), nullable=True)
-    active = db.Column(db.Boolean, nullable=False, default=False)
+    active = db.Column(db.Boolean, nullable=False, default=True)
 
     def get_url(self):
         return url_for('api.get_unit', id=self.id, _external=True)
