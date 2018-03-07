@@ -248,6 +248,7 @@ class InterventionEMS(InterventionBase):
         fields = get_fields(self)
 
         updated = False
+        log_priority = 1
 
         for field in fields:
             if data.get(field) is not None:
@@ -257,6 +258,9 @@ class InterventionEMS(InterventionBase):
                         set_field(self, field, True)
                     elif data[field] == 'False':
                         set_field(self, field, False)
+
+                    if field in ['blu_event']:
+                        log_priority = 2
                     updated = True
                     continue
 
@@ -294,6 +298,7 @@ class InterventionEMS(InterventionBase):
         if updated:
             self.updated = datetime.datetime.now()
             log_cad(db=db,
+                    priority=log_priority,
                     event_id=self.event_id,
                     intervention_ems_id=self.id,
                     unit_id=self.unit_id,
