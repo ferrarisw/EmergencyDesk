@@ -94,8 +94,6 @@ def new_intervention_ems(event_id):
     db.session.add(intervention_ems)
     db.session.commit()
 
-    # intervention_ems = InterventionEMS.query.get_or_404(intervention_ems.id)
-
     log_cad(db,
             priority=1,
             event_id=event.id,
