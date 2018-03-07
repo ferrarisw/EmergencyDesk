@@ -3,7 +3,7 @@ from flask import request
 from cad import db
 from cad.api_v1 import api
 from cad.decorators import json
-from cad.models import Event, InterventionEMS
+from cad.models import Event, InterventionEMS, Log
 from cad.utils import log_cad
 
 
@@ -112,6 +112,13 @@ def new_intervention_ems(event_id):
         db.session.commit()
 
     return {}, 201, {'Location': event.get_url()}
+
+
+@api.route('/events/<event_id>/logs_raw', methods=['GET'])
+@json
+def get_logs_raw_by_event_id(event_id):
+    return {'logs_raw': [logs.export_data() for logs in
+                         Log.query.filter_by(event_id=event_id).all()]}
 
 
 @api.route('/events/<event_id>/interventions_ems', methods=['GET'])

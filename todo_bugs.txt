@@ -5,4 +5,5 @@ INTERVENTION EMS
     un log per l'avvenuta modifica. Il log di segnalazione del tentativo di edit viene correttamente riportato
     #log #interventionsEms
 
--
+- Il campo blu_event e' nel modello di InterventionEMS e non nel modello di Event. Si tratta di un campo specifico per
+    eventi sanitari, ma metterlo nell'intervento non va bene.
