@@ -73,7 +73,7 @@ class Event(db.Model):
 
     created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now())
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, default=1)
-    updated = db.Column(db.DateTime, nullable=True, onupdate=datetime.datetime.now())
+    updated = db.Column(db.DateTime, nullable=True, default=datetime.datetime.now(), onupdate=datetime.datetime.now())
     updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     closed = db.Column(db.DateTime, nullable=True)
     closed_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
@@ -130,13 +130,12 @@ class Event(db.Model):
         for field in fields:
             if data.get(field) is not None:
 
-                updated = True
-
                 if field is 'active':
                     if data[field] == 'True':
                         set_field(self, 'active', True)
                     elif data[field] == 'False':
                         set_field(self, 'active', False)
+                    updated = True
 
                 elif field is 'place' or 'code' or 'criticity':
 
@@ -150,20 +149,21 @@ class Event(db.Model):
 
                     formatted_code = (place or old_place) + (code or old_code) + (criticity or old_criticity)
 
-                    # print('OLD ' + old_place + old_code + old_criticity)
-                    # print('NEW ' + formatted_code)
-
                     set_field(self, field, data[field])
                     set_field(self, 'formatted_code', formatted_code)
+                    updated = True
 
                 elif field is 'lat' or 'lng':
                     set_field(self, field, float(data[field]))
+                    updated = True
 
                 elif field is 'managing_user':
                     set_field(self, field, int(data[field]))
+                    updated = True
 
                 elif field is 'geolocation_data':
                     set_field(self, field, int(data[field]))
+                    updated = True
 
                 elif field is 'id' or 'unit_dispatched' or 'created_by' or 'created':
                     # Questi campi non possono essere modificati manualmente
@@ -173,8 +173,10 @@ class Event(db.Model):
 
                 else:  # Caso generico
                     set_field(self, field, data[field])
+                    updated = True
 
         if updated:
+            self.updated = datetime.datetime.now()
             log_cad(db=db,
                     event_id=self.id,
                     log_action='Event Data Modified',
@@ -190,7 +192,7 @@ class InterventionEMS(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     created = db.Column(db.DateTime, default=datetime.datetime.now())
-    updated = db.Column(db.DateTime, nullable=True, default=datetime.datetime.now())
+    updated = db.Column(db.DateTime, nullable=True, default=datetime.datetime.now(), onupdate=datetime.datetime.now())
     closed = db.Column(db.DateTime, nullable=True)
 
     active = db.Column(db.Boolean, nullable=False, default=True)
@@ -234,13 +236,12 @@ class InterventionEMS(db.Model):
         for field in fields:
             if data.get(field) is not None:
 
-                updated = True
-
                 if field in ['alarmed', 'blu_event', 'is_editing', 'is_managed']:
                     if data[field] == 'True':
                         set_field(self, field, True)
                     elif data[field] == 'False':
                         set_field(self, field, False)
+                    updated = True
                     continue
 
                 elif field in ['active']:
@@ -250,11 +251,13 @@ class InterventionEMS(db.Model):
                     elif data[field] == 'False':
                         set_field(self, 'closed', datetime.datetime.now())
                         set_field(self, 'active', False)
-                        continue
+                    updated = True
+                    continue
 
                 elif field in ['date_IN', 'date_PA', 'date_AR', 'date_CA', 'date_FIN']:
                     from dateutil import parser
                     set_field(self, field, parser.parse(data[field]))
+                    updated = True
                     continue
 
                 elif field in ['id', 'event_id', 'unit_id', 'unit_progressive']:
@@ -265,14 +268,15 @@ class InterventionEMS(db.Model):
                             intervention_ems_id=self.id,
                             unit_id=self.unit_id,
                             log_action='Try to edit non editable data',
-                            log_message='{' + field + ': ' + data[field] + '}')
+                            log_message="{'" + field + "': '" + data[field] + "'}")
                     continue
 
                 else:
                     set_field(self, field, data[field])
+                    updated = True
 
         if updated:
-            set_field(self, 'updated', datetime.datetime.now())
+            self.updated = datetime.datetime.now()
             log_cad(db=db,
                     event_id=self.event_id,
                     intervention_ems_id=self.id,
@@ -285,7 +289,7 @@ class InterventionEMS(db.Model):
     def update_phase(self, data):
         if data.get('phase') is not None and data.get('phase') in ['IN', 'PA', 'AR', 'CA', 'FIN']:
             set_field(self, field='date_' + data.get('phase'), data=datetime.datetime.now())
-            set_field(self, 'updated', datetime.datetime.now())
+            self.updated = datetime.datetime.now()
             log_cad(db=db,
                     priority=2,
                     event_id=self.event_id,
@@ -384,12 +388,14 @@ class Log(db.Model):
     # Basic Data
 
     id = db.Column(db.Integer, primary_key=True)
-    priority = db.Column(db.Integer, default=0)
-    mode = db.Column(db.String(5), nullable=False, default='INFO')
+    priority = db.Column(db.Integer, default=1)
+    level = db.Column(db.String(5), nullable=False, default='INFO')
+
     created = db.Column(db.DateTime, default=datetime.datetime.now(), nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
     intervention_ems_id = db.Column(db.Integer, db.ForeignKey('interventions_ems.id'), nullable=True)
     unit_id = db.Column(db.Integer, db.ForeignKey('units.id'), nullable=True)
+
     log_action = db.Column(db.String(128), nullable=False, default='')
     log_message = db.Column(db.Text, nullable=True)
 

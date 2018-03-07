@@ -94,15 +94,15 @@ def new_intervention_ems(event_id):
     db.session.add(intervention_ems)
     db.session.commit()
 
-    intervention_ems = InterventionEMS.query.get_or_404(intervention_ems.id)
+    # intervention_ems = InterventionEMS.query.get_or_404(intervention_ems.id)
 
     log_cad(db,
             priority=1,
             event_id=event.id,
             intervention_ems_id=intervention_ems.id,
-            log_action='InterventionEMS ' + str(intervention_ems.id) + ' Created for Event ' + str(event_id))
+            log_action='InterventionEMS Created',
+            log_message='InterventionEMS ' + str(intervention_ems.id) + ' Created for Event ' + str(event_id))
 
-    # event.import_data({'unit_dispatched': event.unit_dispatched + 1})
     event.unit_dispatched += 1
     event.interventions_ems.append(intervention_ems)
     db.session.add(event)
