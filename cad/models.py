@@ -185,11 +185,11 @@ class Event(db.Model):
         return self
 
 
-class InterventionEMS(db.Model):
-    __tablename__ = 'interventions_ems'
+class InterventionBase(db.Model):
+    __tablename__ = 'interventions_base'
 
-    # Basic Data
     id = db.Column(db.Integer, primary_key=True)
+    intervention_type = db.Column(db.String(50))
 
     created = db.Column(db.DateTime, default=datetime.datetime.now())
     updated = db.Column(db.DateTime, nullable=True, default=datetime.datetime.now(), onupdate=datetime.datetime.now())
@@ -202,6 +202,18 @@ class InterventionEMS(db.Model):
 
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
     unit_id = db.Column(db.Integer, db.ForeignKey('units.id'), nullable=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'interventions_base',
+        'polymorphic_on': intervention_type
+    }
+
+
+class InterventionEMS(InterventionBase):
+    __tablename__ = 'interventions_ems'
+
+    # Basic Data
+    id = db.Column(db.Integer, db.ForeignKey('interventions_base.id'), primary_key=True)
 
     unit_call_sign = db.Column(db.String(64), db.ForeignKey('units.call_sign'))
     unit_profile = db.Column(db.String(64))
@@ -221,6 +233,10 @@ class InterventionEMS(db.Model):
     outcome = db.Column(db.String(128), nullable=True)
     sanitary_eval = db.Column(db.String(1), nullable=True)
     destination = db.Column(db.String(128), nullable=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'interventions_ems',
+    }
 
     def get_url(self):
         return url_for('api.get_intervention_ems', id=self.id, _external=True)
@@ -263,7 +279,7 @@ class InterventionEMS(db.Model):
                 elif field in ['id', 'event_id', 'unit_id', 'unit_progressive']:
                     log_cad(db=db,
                             priority=5,
-                            mode='WARN',
+                            level='WARN',
                             event_id=self.event_id,
                             intervention_ems_id=self.id,
                             unit_id=self.unit_id,
@@ -304,10 +320,10 @@ class Unit(db.Model):
     # Basic Data
 
     id = db.Column(db.Integer, primary_key=True)
-    status = db.Column(db.String(64), default='OPERATIVE')
     created = db.Column(db.DateTime, default=datetime.datetime.now())
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
 
+    status = db.Column(db.String(64), default='OPERATIVE')
     call_sign = db.Column(db.String(64))
     profile = db.Column(db.String(64))
     type = db.Column(db.String(64))
@@ -317,7 +333,7 @@ class Unit(db.Model):
     lng = db.Column(db.Float, nullable=True)
 
     event_dispatched = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
-    intervention_dispatched = db.Column(db.Integer, db.ForeignKey('interventions_ems.id'), nullable=True)
+    intervention_dispatched = db.Column(db.Integer, db.ForeignKey('interventions_base.id'), nullable=True)
     active = db.Column(db.Boolean, nullable=False, default=True)
 
     def get_url(self):
@@ -393,7 +409,7 @@ class Log(db.Model):
 
     created = db.Column(db.DateTime, default=datetime.datetime.now(), nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
-    intervention_ems_id = db.Column(db.Integer, db.ForeignKey('interventions_ems.id'), nullable=True)
+    intervention_ems_id = db.Column(db.Integer, db.ForeignKey('interventions_base.id'), nullable=True)
     unit_id = db.Column(db.Integer, db.ForeignKey('units.id'), nullable=True)
 
     log_action = db.Column(db.String(128), nullable=False, default='')
