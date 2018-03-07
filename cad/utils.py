@@ -32,7 +32,9 @@ mutable.MutableDict.associate_with(JsonEncodedDict)
 
 
 def set_field(instance: object, field: str, data) -> None:
-    if data is '' or not data:
+    if data is False:
+        super.__setattr__(instance, field, False)
+    elif data is '' or not data:
         super.__setattr__(instance, field, None)
     else:
         super.__setattr__(instance, field, data)
