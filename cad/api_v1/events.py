@@ -74,7 +74,7 @@ def new_event():
 
     log_cad(db,
             event_id=event.id,
-            log_action='Event Created')
+            log_action='event_created')
 
     if request.json:
         event = Event.query.get_or_404(event.id)
@@ -97,8 +97,8 @@ def new_intervention_ems(event_id):
     log_cad(db,
             priority=1,
             event_id=event.id,
-            intervention_ems_id=intervention_ems.id,
-            log_action='InterventionEMS Created',
+            intervention_id=intervention_ems.id,
+            log_action='intervention_ems_created',
             log_message='InterventionEMS ' + str(intervention_ems.id) + ' Created for Event ' + str(event_id))
 
     event.unit_dispatched += 1

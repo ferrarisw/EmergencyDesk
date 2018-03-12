@@ -414,10 +414,10 @@ class Log(db.Model):
 
     created = db.Column(db.DateTime, default=datetime.datetime.now(), nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True)
-    intervention_ems_id = db.Column(db.Integer, db.ForeignKey('interventions_base.id'), nullable=True)
+    intervention_id = db.Column(db.Integer, db.ForeignKey('interventions_base.id'), nullable=True)
     unit_id = db.Column(db.Integer, db.ForeignKey('units.id'), nullable=True)
 
-    log_action = db.Column(db.String(128), nullable=False, default='')
+    log_action = db.Column(db.String(128), nullable=True)
     log_message = db.Column(db.Text, nullable=True)
 
     def get_url(self):
