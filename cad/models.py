@@ -122,6 +122,12 @@ class Event(db.Model):
     def export_data(self):
         return generic_export_data(self)
 
+    def export_data_raw(self):
+        data = generic_export_data(self)
+        data['interventions'] = [intervention_ems.export_data() for intervention_ems in
+                                 InterventionEMS.query.filter_by(event_id=self.id).all()]
+        return data
+
     def import_data(self, data):
         fields = get_fields(self)
 

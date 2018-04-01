@@ -26,7 +26,7 @@ def get_events_raw():
     Returns the complete dataset of every event in the DB
     :return: The complete dataset of every event in the DB
     """
-    return {'events_raw': [event.export_data() for event in
+    return {'events_raw': [event.export_data_raw() for event in
                            Event.query.all()]}
 
 
@@ -50,7 +50,7 @@ def get_active_events_raw():
 
     :return: The complete dataset of only active event in the DB
     """
-    return {'active_events_raw': [event.export_data() for event in
+    return {'active_events_raw': [event.export_data_raw() for event in
                                   Event.query.filter_by(active=True).all()]}
 
 
@@ -62,7 +62,7 @@ def get_event(id):
     :param id: The ID of the desired event
     :return: The complete dataset of the desired event
     """
-    return Event.query.get_or_404(id).export_data()
+    return Event.query.get_or_404(id).export_data_raw()
 
 
 @api.route('/events/', methods=['POST'])
