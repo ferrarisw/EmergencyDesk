@@ -11,7 +11,7 @@ from . import db
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), index=True)
+    username = db.Column(db.String(64), unique=True, index=True)
     password_hash = db.Column(db.String(128))
 
     def set_password(self, password):
@@ -96,10 +96,9 @@ class Event(db.Model):
     # Event Status
 
     status = db.Column(db.String(128), nullable=False, default='UNMANAGED')
-    is_editing = db.Column(db.Boolean, nullable=False, default=False)
     is_managed = db.Column(db.Boolean, nullable=False, default=False)
     is_managing = db.Column(db.Boolean, nullable=False, default=False)
-    managing_user = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    managing_user = db.Column(db.String(64), db.ForeignKey('users.username'), nullable=True)
 
     dispatch_delayed = db.Column(db.DateTime, nullable=True)
     dispatch_date = db.Column(db.DateTime, nullable=True)
@@ -175,7 +174,7 @@ class Event(db.Model):
                     set_field(self, field, int(data[field]))
                     updated = True
 
-                elif field is 'id' or 'unit_dispatched' or 'created_by' or 'created':
+                elif field is 'id' or 'unit_dispatched' or 'created':
                     # Questi campi non possono essere modificati manualmente
                     # ma sono settati automaticamente dal sistema
                     print("Non modificabile")
