@@ -1,3 +1,5 @@
+import http
+
 from flask import request
 
 from cad import db
@@ -95,3 +97,70 @@ def edit_event(id):
     db.session.commit()
 
     return {}
+
+
+@api.route('/events/<int:id>/lock', methods=['GET'])
+@json
+def lock_event(id):
+    json_data = request.json
+
+    # When necessary data are not provided (managing_user) 417
+    if not json_data['managing_user']:
+        return {'message': 'Missing information managing_user',
+                'status': http.HTTPStatus.EXPECTATION_FAILED}, http.HTTPStatus.EXPECTATION_FAILED
+
+    event = Event.query.get_or_404(id)
+
+    # When the resource is already locked - 423
+    if event.is_managing:
+        return {'message': 'Event already locked',
+                'status': http.HTTPStatus.UNAUTHORIZED}, http.HTTPStatus.UNAUTHORIZED
+
+    locking_data = {
+        'is_managing': True,
+        'managing_user': json_data['managing_user'],
+        'updated_by': json_data['managing_user']
+    }
+
+    event.import_data(locking_data)
+    db.session.add(event)
+    db.session.commit()
+
+    return {'message': 'Event correctly locked',
+            'status': http.HTTPStatus.OK}, http.HTTPStatus.OK
+
+
+@api.route('/events/<int:id>/unlock', methods=['GET'])
+@json
+def unlock_event(id):
+    json_data = request.json
+
+    # When necessary data are not provided (managing_user)
+    if not json_data['managing_user']:
+        return {'message': 'Missing information managing_user',
+                'status': http.HTTPStatus.EXPECTATION_FAILED}, http.HTTPStatus.EXPECTATION_FAILED
+
+    event = Event.query.get_or_404(id)
+
+    # When the resource is already unlocked
+    if not event.is_managing:
+        return {'message': 'Event already unlocked',
+                'status': http.HTTPStatus.UNAUTHORIZED}, http.HTTPStatus.UNAUTHORIZED
+
+    # TODO Verify admin permissions with a query and not json_data
+    if event.is_managing and event.managing_user is not json_data['managing_user'] and not json_data['is_admin']:
+        return {'message': 'User is not allowed to unlock this event',
+                'status': http.HTTPStatus.UNAUTHORIZED}, http.HTTPStatus.UNAUTHORIZED
+
+    locking_data = {
+        'is_managing': False,
+        'managing_user': None,
+        'updated_by': json_data['managing_user']
+    }
+
+    event.import_data(locking_data)
+    db.session.add(event)
+    db.session.commit()
+
+    return {'message': 'Event correctly unlocked',
+            'status': http.HTTPStatus.OK}, http.HTTPStatus.OK
