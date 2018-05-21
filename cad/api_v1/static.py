@@ -3,6 +3,12 @@ from cad.decorators import json
 from .. import static
 
 
+@api.route('/static/ping/', methods=['GET'])
+@json
+def ping():
+    return {}
+
+
 @api.route('/static/gmaps_conf/', methods=['GET'])
 @json
 def get_gmaps_conf():

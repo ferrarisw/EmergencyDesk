@@ -7,18 +7,6 @@ from cad.models import Event, InterventionEMS, Log
 from cad.utils import log_cad
 
 
-@api.route('/events/', methods=['GET'])
-@json
-def get_events():
-    """
-    Returns the URL of every event in the DB, both active and not active
-
-    :return: ULRs of every events in the DB
-    """
-    return {'events': [event.get_url() for event in
-                       Event.query.all()]}
-
-
 @api.route('/events_raw/', methods=['GET'])
 @json
 def get_events_raw():
@@ -28,18 +16,6 @@ def get_events_raw():
     """
     return {'events_raw': [event.export_data_raw() for event in
                            Event.query.all()]}
-
-
-@api.route('/active_events/', methods=['GET'])
-@json
-def get_active_events():
-    """
-    Returns the URL of only active event in the DB
-
-    :return: ULRs of only active events in the DB
-    """
-    return {'active_events': [event.get_url() for event in
-                              Event.query.filter_by(active=True).all()]}
 
 
 @api.route('/active_events_raw/', methods=['GET'])
@@ -52,17 +28,6 @@ def get_active_events_raw():
     """
     return {'active_events_raw': [event.export_data_raw() for event in
                                   Event.query.filter_by(active=True).all()]}
-
-
-@api.route('/events/<int:id>', methods=['GET'])
-@json
-def get_event(id):
-    """
-    Returns the complete dataset of the event given its ID
-    :param id: The ID of the desired event
-    :return: The complete dataset of the desired event
-    """
-    return Event.query.get_or_404(id).export_data_raw()
 
 
 @api.route('/events/', methods=['POST'])
@@ -119,20 +84,6 @@ def new_intervention_ems(event_id):
 def get_logs_raw_by_event_id(event_id):
     return {'logs_raw': [logs.export_data() for logs in
                          Log.query.filter_by(event_id=event_id).all()]}
-
-
-@api.route('/events/<event_id>/interventions_ems', methods=['GET'])
-@json
-def get_invervention_ems_by_event_id(event_id):
-    return {'interventions_ems': [intervention_ems.get_url() for intervention_ems in
-                                  InterventionEMS.query.filter_by(event_id=event_id).all()]}
-
-
-@api.route('/events/<event_id>/interventions_ems_raw', methods=['GET'])
-@json
-def get_invervention_ems_raw_by_event_id(event_id):
-    return {'interventions_ems_raw': [intervention_ems.export_data() for intervention_ems in
-                                      InterventionEMS.query.filter_by(event_id=event_id).all()]}
 
 
 @api.route('/events/<int:id>', methods=['PUT'])
