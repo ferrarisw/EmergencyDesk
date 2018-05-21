@@ -102,6 +102,22 @@ def edit_event(id):
 @api.route('/events/<int:id>/lock', methods=['GET'])
 @json
 def lock_event(id):
+    """
+    This method allows you to block write access to an event by setting the is_managing parameter to True. The aim is to
+    avoid data consistency problems due to the high level of competition to which this system may be subject.
+
+    To block an event you must provide the username of the person who requests it. If this is not provided, the request
+    will be rejected with status code 417 (EXPECTATION_FAILED).
+
+    It is then verified that the event was not already blocked by another user. If yes, the request is rejected with
+    status code 423 (UNAUTHORIZED).
+
+    If the procedure passes these checks positively, then the event status is changed by setting is_managing = True and
+    managing_user with the username of the person who requested it.
+
+    :param id: The event ID to be unlocked
+    :return: The HTTP Status Code of the lock request
+    """
     json_data = request.json
 
     # When necessary data are not provided (managing_user) 417
@@ -133,6 +149,22 @@ def lock_event(id):
 @api.route('/events/<int:id>/unlock', methods=['GET'])
 @json
 def unlock_event(id):
+    """
+    This method allows you to unlock an event from a previously taken lock. This will allow other users to write access
+    event data.
+
+    To unlock an event, you must provide the user name of the event requester. If this is not provided, the request will
+    be rejected with status code 417 (EXPECTATION_FAILED).
+
+    It is then verified that the event was blocked by the supplied user. Otherwise, the request will be rejected with a
+    status code 423 (UNAUTHORIZED).
+
+    If the procedure passes these checks positively, then the event status is changed by setting is_managing = False and
+    emptying the managing_user parameter.
+
+    :param id: The event ID to be unlocked
+    :return: The HTTP Status Code of the unlock request
+    """
     json_data = request.json
 
     # When necessary data are not provided (managing_user)
