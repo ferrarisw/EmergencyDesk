@@ -97,8 +97,8 @@ class Event(db.Model):
 
     status = db.Column(db.String(128), nullable=False, default='UNMANAGED')
     is_managed = db.Column(db.Boolean, nullable=False, default=False)
-    is_managing = db.Column(db.Boolean, nullable=False, default=False)
-    managing_user = db.Column(db.String(64), db.ForeignKey('users.username'), nullable=True)
+    is_editing = db.Column(db.Boolean, nullable=False, default=False)
+    editing_user = db.Column(db.String(64), db.ForeignKey('users.username'), nullable=True)
 
     dispatch_delayed = db.Column(db.DateTime, nullable=True)
     dispatch_date = db.Column(db.DateTime, nullable=True)

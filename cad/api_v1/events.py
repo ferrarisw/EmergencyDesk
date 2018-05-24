@@ -154,7 +154,7 @@ def lock_event(id):
     json_data = request.json
 
     # When necessary data are not provided (managing_user) 417
-    if not json_data['managing_user']:
+    if not json_data['editing_user']:
         return {'message': 'Missing information managing_user',
                 'status': http.HTTPStatus.EXPECTATION_FAILED}, http.HTTPStatus.EXPECTATION_FAILED
 
@@ -166,8 +166,8 @@ def lock_event(id):
                 'status': http.HTTPStatus.UNAUTHORIZED}, http.HTTPStatus.UNAUTHORIZED
 
     locking_data = {
-        'is_managing': True,
-        'managing_user': json_data['managing_user'],
+        'is_editing': True,
+        'editing_user': json_data['managing_user'],
         'updated_by': json_data['managing_user']
     }
 
@@ -201,7 +201,7 @@ def unlock_event(id):
     json_data = request.json
 
     # When necessary data are not provided (managing_user)
-    if not json_data['managing_user']:
+    if not json_data['editing_user']:
         return {'message': 'Missing information managing_user',
                 'status': http.HTTPStatus.EXPECTATION_FAILED}, http.HTTPStatus.EXPECTATION_FAILED
 
@@ -218,8 +218,8 @@ def unlock_event(id):
                 'status': http.HTTPStatus.UNAUTHORIZED}, http.HTTPStatus.UNAUTHORIZED
 
     locking_data = {
-        'is_managing': False,
-        'managing_user': None,
+        'is_editing': False,
+        'editing_user': None,
         'updated_by': json_data['managing_user']
     }
 
