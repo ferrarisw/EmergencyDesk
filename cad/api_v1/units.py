@@ -7,11 +7,23 @@ from cad.models import Unit
 from cad.utils import log_cad
 
 
+@api.route('/units/', methods=['GET'])
+@json
+def get_units():
+    return {'units': [unit.get_url() for unit in Unit.query.all()]}
+
+
 @api.route('/units_raw/', methods=['GET'])
 @json
 def get_units_raw():
     return {'units_raw': [unit.export_data() for unit in
                           Unit.query.all()]}
+
+
+@api.route('/units/<int:id>', methods=['GET'])
+@json
+def get_unit(id):
+    return Unit.query.get_or_404(id).export_data()
 
 
 @api.route('/units/', methods=['POST'])

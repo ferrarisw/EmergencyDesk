@@ -9,6 +9,28 @@ from cad.models import Event, InterventionEMS, Log
 from cad.utils import log_cad
 
 
+@api.route('/events/', methods=['GET'])
+@json
+def get_events():
+    """	
+    Returns the URL of every event in the DB, both active and not active
+    :return: ULRs of every events in the DB	
+    """
+    return {'events': [event.get_url() for event in
+                       Event.query.all()]}
+
+
+@api.route('/events/<int:id>', methods=['GET'])
+@json
+def get_event(id):
+    """	
+    Returns the complete dataset of the event given its ID	
+    :param id: The ID of the desired event	
+    :return: The complete dataset of the desired event	
+    """
+    return Event.query.get_or_404(id).export_data_raw()
+
+
 @api.route('/events_raw/', methods=['GET'])
 @json
 def get_events_raw():
@@ -18,6 +40,17 @@ def get_events_raw():
     """
     return {'events_raw': [event.export_data_raw() for event in
                            Event.query.all()]}
+
+
+@api.route('/active_events/', methods=['GET'])
+@json
+def get_active_events():
+    """	
+    Returns the URL of only active event in the DB
+    :return: ULRs of only active events in the DB	
+    """
+    return {'active_events': [event.get_url() for event in
+                              Event.query.filter_by(active=True).all()]}
 
 
 @api.route('/active_events_raw/', methods=['GET'])
@@ -127,7 +160,7 @@ def lock_event(id):
 
     event = Event.query.get_or_404(id)
 
-    # When the resource is already locked - 423
+    # When the resource is already locked  423
     if event.is_managing:
         return {'message': 'Event already locked',
                 'status': http.HTTPStatus.UNAUTHORIZED}, http.HTTPStatus.UNAUTHORIZED
