@@ -1,5 +1,4 @@
 import datetime
-
 from flask import url_for, current_app
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash

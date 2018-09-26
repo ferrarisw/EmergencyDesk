@@ -1,5 +1,4 @@
 import http
-
 from flask import request
 
 from cad import db

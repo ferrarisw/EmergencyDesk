@@ -1,5 +1,4 @@
 import datetime
-
 import googlemaps
 
 from cad.api_v1 import api
